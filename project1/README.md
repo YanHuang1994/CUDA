@@ -1,4 +1,4 @@
-1. Compile and run MNIST-CNN-99.5
+1. Compile and run MNIST-CNN-99.5 command line:
 
 cd ./project1/MNIST-CNN-99.5
 
@@ -10,7 +10,7 @@ make
 
 ./CNN.out
 
-2. Compile and run part1_bonus
+2. Compile and run part1_bonus command line:
 
 cd ./project1/part1_bonus
 
