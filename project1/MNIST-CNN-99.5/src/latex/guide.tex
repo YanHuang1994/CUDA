@@ -1,0 +1,203 @@
+\documentclass{newsiambook}
+\usepackage{makeidx}
+\usepackage{epic}
+\usepackage{curves}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{longtable}
+%\usepackage{color}
+ \usepackage{thumbpdf}
+ \usepackage[pdftex]{color} % black,white,red,green,blue,cyan,magenta,yellow
+ \usepackage[pdftex,colorlinks]{hyperref}
+ \usepackage[pdftex]{graphicx}
+ \usepackage{float}
+
+
+%%% this centers the text on a letter size page
+\setlength{\oddsidemargin}{0.0in}
+\setlength{\evensidemargin}{0.016in}
+
+%%% this makes the left margin bigger
+%%% (pages match for two sided printing)
+%\setlength{\oddsidemargin}{0.75in}
+%\setlength{\evensidemargin}{-0.734in}
+
+%%% these are the default settings in newsiambook.cls
+%%% (pages match for one sided printing)
+%\setlength{\oddsidemargin}{.75in}
+%\setlength{\evensidemargin}{.766in}
+
+\def\mb#1{\mbox{\boldmath $#1$}}
+\def\norm#1{|\!| #1 |\!|}
+\def\bignorm#1{\big|\!\big| #1 \big|\!\big|}
+\def\biggnorm#1{\bigg|\!\bigg| #1 \bigg|\!\bigg|}
+\def\Bignorm#1{\Big|\!\Big| #1 \Big|\!\Big|}
+\def\Biggnorm#1{\Bigg|\!\Bigg| #1 \Bigg|\!\Bigg|}
+\def\snorm#1{| #1 |}
+\def\bigsnorm#1{\big| #1 \big|}
+\def\biggsnorm#1{\bigg| #1 \bigg|}
+\def\Bigsnorm#1{\Big| #1 \Big|}
+\def\Biggsnorm#1{\Bigg| #1 \Bigg|}
+\def\enorm#1{|\!|\!| #1 |\!|\!|}
+\def\bigenorm#1{\big|\!\big|\!\big| #1 \big|\!\big|\!\big|}
+\def\biggenorm#1{\bigg|\!\bigg|\!\bigg| #1 \bigg|\!\bigg|\!\bigg|}
+\def\Bigenorm#1{\Big|\!\Big|\!\Big| #1 \Big|\!\Big|\!\Big|}
+\def\Biggenorm#1{\Bigg|\!\Bigg|\!\Bigg| #1 \Bigg|\!\Bigg|\!\Bigg|}
+\def\Re{I\!\!R}
+\def\eref#1{(\ref{#1})}
+
+\def\tab{\par\indent}
+\def\tabb{\tab\hskip1.5em}
+\def\tabbb{\tab\hskip3.5em}
+\def\atab#1{\par\indent\hskip5.0em{\bf  #1}\hskip1.5em}
+\def\ctab{\par\indent\hskip8.5em}
+\newenvironment{plt}{\vspace{0.1cm}\footnotesize}{\normalsize \vspace{0.1cm}}
+\newenvironment{plt0}{\vspace{0.1cm}}{\vspace{0.1cm}}
+\newenvironment{qqt}{\vspace{0.1cm}\begin{quote}}{\end{quote} \vspace{0.1cm}}
+\newenvironment{lst}{\begin{itemize} \itemsep=0pt}{\end{itemize}}
+\def\f#1{\textsl{#1}}
+\def\ff#1{\mbox{\textsl{#1}}}
+
+% peg's spacing in tables
+
+\newcommand{\strutul}{\rule[-1ex]{0pt}{3.5ex}}%   Total height 3.5
+\newcommand{\strutl}{\rule[-1ex]{0pt}{2.5ex}}%    Total height 3.5
+\newcommand{\strutu}{\rule[-.5ex]{0pt}{3ex}}%     Total height 3.5
+
+% colors etc
+
+%\definecolor{myblue}{rgb}{0.375,0.375,0.75}
+\definecolor{myblue}{rgb}{0.2,0.2,0.7}
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mycyan}{rgb}{0,0.6,0.6}
+\definecolor{myred}{rgb}{0.9,0.2,0.2}
+\definecolor{mymagenta}{rgb}{0.9,0.2,0.9}
+
+\def\Blue#1{{\color{myblue}#1}}
+\def\Red#1{{\color{myred}#1}}
+\def\Green#1{{\color{mygreen}#1}}
+\def\Cyan#1{{\color{mycyan}#1}}
+\def\Magenta#1{{\color{mymagenta}#1}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newif\ifpdf
+\ifx\pdfoutput\undefined
+   \pdffalse        % running LaTeX
+\else
+ \ifcase\pdfoutput
+    \pdffalse       % running LaTeX
+ \else
+    \pdftrue        % running pdfLaTeX
+ \fi
+\fi
+
+\def\myfig#1#2{\includegraphics[height=#1] {#2}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%\psdraft
+\makeindex
+\begin{document}
+\pagenumbering{roman}
+\setcounter{page}{1}
+\markboth{WEBGUI USERS' GUIDE}{CONTENTS}
+
+\begin{titlepage}
+\begin{flushleft}
+{\sffamily{\Huge{\bfseries{
+        WEBGUI:}}}}\\
+{\sffamily{\huge{\bfseries{
+	A Web Browser Based\\
+        Graphical User Interface\\
+        for Scientific Software\\ }}}}
+\vspace*{0.4cm}
+{\sffamily{\huge{\bfseries{
+        Users' Guide}}}}\\
+\vspace{0.6cm}
+{\sffamily\LARGE{
+Christopher Deotte\\}}
+\vspace{0.2cm}
+{\sffamily\Large{
+Department of Mathematics \\
+University of California at San Diego \\
+La Jolla, California 92093-0112\\
+\vspace{0.6cm}
+June, 2017}\\
+}
+\end{flushleft}
+\end{titlepage}
+\newpage
+
+%\thispagestyle{empty}
+\begin{flushleft}
+\vspace*{3.0cm}
+{\sffamily\large{
+Copyright (c) 2017, Christopher Deotte.}}\\
+\vspace{0.5cm}
+{\sffamily\large{
+This work was supported by the National Science Foundation \\
+under grant DMS-1345013.}} \\
+\vspace{1.0cm}
+{\sffamily\normalsize{
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:\\
+\vspace{0.5cm}
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.\\
+\vspace{0.5cm}
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.}}\\
+\end{flushleft}
+
+\newpage
+
+ \tableofcontents
+
+ \include{preface}
+ \newpage
+ \include{intro}
+ \newpage
+ \include{api}
+ \newpage
+ \include{buttons}
+ \newpage
+ \include{features}
+ \newpage
+ \include{memory}
+ \newpage
+ \include{example}
+ \newpage
+ \include{modify}
+ \newpage
+
+\cleardoublepage
+\setcounter{page}{133}
+\markboth{WEBGUI USERS' GUIDE}{REFERENCES}
+ \bibliography{ref}
+ \bibliographystyle{siam}
+%\newpage
+
+\cleardoublepage
+\setcounter{page}{139}
+\markboth{WEBGUI USERS' GUIDE}{INDEX}
+\flushbottom
+ \printindex
+
+
+\end{document}
+
+
+
+

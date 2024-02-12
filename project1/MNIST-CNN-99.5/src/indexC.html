@@ -1,0 +1,1438 @@
+  Enter Command:<br>
+  <form onSubmit="AJAX('writeline.php',document.getElementById('command').value,1,1,1,0);return false;">
+    <input id="command" type="text" name='command' size=80 autocomplete="off">
+    <input id="click" type="submit" value="Submit" onclick="" >
+  </form>
+</div><br>
+
+<!-- Output text pane with command history -->
+<iframe id='text' width=600 height=400 style='background-color:#EEEEEE'></iframe>
+
+</div><!-- id='controls' -->
+
+<!-- Display panes for 3D objects and 2D images -->
+ <div id="cdiv0" style="display:none;border:1px solid #BBBBBB;">
+    <img src="figure0.bmp" id="figure0" >
+    <button onclick="releasememory2(0);" style="float:right;">Free</button>
+ </div>
+
+ <div id="cdiv3" style="display:inline-block;border:1px solid #BBBBBB;">
+    <canvas id="my_Canvas0"></canvas><br>
+    <span id="textD3" style="color:#DDDDDD">&#160 0 tri, 0 lin</span>
+    <button onclick="document.getElementById('filechoice0').click();" style="float:right">Load</button>
+    <button onclick="save(0);" style="float:right">Save</button>
+    <button id="pop0" onclick="pop(0);" style="float:right">Pop</button>
+    <button id="spin0" onclick="stopspin[0]*=-1;spin(0);" style="float:right">Spin</button>
+    <button onclick="releasememory(0);" style="float:right">Free</button>
+    <button onclick="resetposition(0);draw(0)" style="float:right">Reset</button>
+ </div>
+
+ <div id="cdiv1" style="display:none;border:1px solid #BBBBBB;">
+    <img src="figure1.bmp" id="figure1" >
+    <button onclick="releasememory2(1);" style="float:right">Free</button>
+ </div>
+
+ <div id="cdiv4" style="display:inline-block;border:1px solid #BBBBBB;">
+    <canvas id="my_Canvas1" ></canvas>
+    <span id="textD4" style="color:#DDDDDD">&#160 0 tri, 0 lin</span>
+    <button onclick="document.getElementById('filechoice1').click();" style="float:right">Load</button>
+    <button onclick="save(1);" style="float:right">Save</button>
+    <button id="pop1" onclick="pop(1);" style="float:right">Pop</button>
+    <button id="spin1" onclick="stopspin[1]*=-1;spin(1);" style="float:right">Spin</button>
+    <button onclick="releasememory(1);" style="float:right">Free</button>
+    <button onclick="resetposition(1);draw(1)" style="float:right">Reset</button>
+ </div>
+
+ <div id="cdiv2" style="display:none;border:1px solid #BBBBBB;">
+    <img src="figure2.bmp" id="figure2" >
+    <button onclick="releasememory2(2);" style="float:right">Free</button>
+ </div>
+
+ <div id="cdiv5" style="display:inline-block;border:1px solid #BBBBBB;">
+    <canvas id="my_Canvas2"></canvas>
+    <span id="textD5" style="color:#DDDDDD">&#160 0 tri, 0 lin</span>
+    <button onclick="document.getElementById('filechoice2').click();" style="float:right">Load</button>
+    <button onclick="save(2);" style="float:right">Save</button>
+    <button id="pop2" onclick="pop(2);" style="float:right">Pop</button>
+    <button id="spin2" onclick="stopspin[2]*=-1;spin(2);" style="float:right">Spin</button>
+    <button onclick="releasememory(2);" style="float:right">Free</button>
+    <button onclick="resetposition(2);draw(2)" style="float:right">Reset</button>
+ </div><br><br>
+
+ <div id="webGLcontrols">
+    <input id="filechoice0" type="file" onchange="openFile(event)" style="display:none">
+    <input id="filechoice1" type="file" onchange="openFile(event)" style="display:none">
+    <input id="filechoice2" type="file" onchange="openFile(event)" style="display:none">
+ </div>
+
+ <div id="confirmbutton" style="display:none;border-radius:10px;cursor:pointer;position:absolute;left:10px;top:10px;
+    color:#333333;background-color:#EEEEEE;font-size:25px;border:5px solid blue;padding:4px;z-index:3">
+    <div onclick="confirmcontinue()">CLICK TO CONTINUE</div>
+ </div>
+
+ <div id="mouseinfodiv" style="display:none;border-radius:10px;position:absolute;left:10px;top:10px;
+    color:#333333;background-color:#EEEEEE;border:5px solid blue;padding:4px">
+    <div id="mouseinfo">Hello!</div>
+ </div>
+
+ <div id='locked' style="color:#DDDDDD"></div>
+ <div id='endian' style="color:#DDDDDD;display:none">ENDIAN FLIP: Client is receiving flipped endianness of server.</div>
+ <div id='animate' style="color:#DDDDDD"></div>
+ <div id='lastkey' style="color:#DDDDDD"></div>
+ <div id='lastmse' style="color:#DDDDDD"></div>
+ <div id='blackout' style="position:fixed;z-index:2;top:0;left:0;background:rgba(255,255,255,0.6);display:none;">
+</body>
+
+<script>
+    /**********************************************************************************/
+    /* Copyright (c) 2017, Christopher Deotte                                         */
+    /*                                                                                */
+    /* Permission is hereby granted, free of charge, to any person obtaining a copy   */
+    /* of this software and associated documentation files (the "Software"), to deal  */
+    /* in the Software without restriction, including without limitation the rights   */
+    /* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell      */
+    /* copies of the Software, and to permit persons to whom the Software is          */
+    /* furnished to do so, subject to the following conditions:                       */
+    /*                                                                                */
+    /* The above copyright notice and this permission notice shall be included in all */
+    /* copies or substantial portions of the Software.                                */
+    /*                                                                                */
+    /* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR     */
+    /* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,       */
+    /* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE    */
+    /* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER         */
+    /* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,  */
+    /* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE  */
+    /* SOFTWARE.                                                                      */
+    /**********************************************************************************/
+
+    /***************************************************************************/
+    /* this HTML/CSS/JavaScript/AJAX/WebGL is generated by                     */
+    /* WEBGUI A web browser based graphical user interface                     */
+    /* Version: 1.0 - June 25 2017                                             */
+    /***************************************************************************/
+    /* Author: Christopher Deotte                                              */
+    /* Advisor: Randolph E. Bank                                               */
+    /* Funding: NSF DMS-1345013                                                */
+    /* Documentation: http://ccom.ucsd.edu/~cdeotte/webgui                     */
+    /***************************************************************************/
+    
+    var variable = '', prefix = '', sbtn=[], sbtnCT=0, active=0, firstresize=1;
+    var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    var isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+    var isMobile = 0; checkMobile();
+    window.onscroll = function(){
+        document.getElementById("confirmbutton").style.top = document.body.scrollTop + 10;
+    }
+    window.onfocus = enablebuttons;
+    window.onblur = disablebuttons;
+    document.getElementById('text').contentWindow.onfocus = enablebuttons;
+    document.getElementById('text').contentWindow.onblur = disablebuttons;
+    function disablebuttons(){
+        if (sg==-1) document.getElementById("blackout").style.display="";
+    }
+    function enablebuttons(){
+        if (document.getElementById("confirmbutton").style.display!="block")
+            document.getElementById("blackout").style.display="none";
+    }
+    function command(x,z){
+        /* process and filter user supplied command string before sending to server */
+        var text='';
+        var div = document.getElementById(x+'parameters');
+        if (div){
+            var inputs = div.getElementsByTagName('input');
+            for (var i=0; i<inputs.length; i++){
+                if (inputs[i].hasAttribute('class'))
+                if (inputs[i].value!=inputs[i].getAttribute('data')){
+                    inputs[i].value = inputs[i].value.replace(/\"/g,"");
+                    inputs[i].value = inputs[i].value.replace(/\'/g,"");
+                    if (text!='') text=text+',';
+                    else text=text+' ';
+                    if (inputs[i].getAttribute('data-t')=='l') text=text+''+inputs[i].getAttribute('class')+'="'+inputs[i].value+'"';
+                    else {
+                        var err=0;
+                        inputs[i].value = inputs[i].value.replace(/ /g,"");
+                        inputs[i].value = inputs[i].value.replace(/,/g,"");
+                        if (inputs[i].getAttribute('data-t')=='i' || inputs[i].getAttribute('data-t')=='r')
+                            inputs[i].value = inputs[i].value.replace(/\+/g,"");
+                        if (inputs[i].getAttribute('data-t')=='i' && isint(inputs[i].value)==0) err=1;
+                        if (inputs[i].getAttribute('data-t')=='r' && isreal(inputs[i].value)==0) err=1;
+                        if (err==1){
+                            alert("ERROR: variable '"+inputs[i].getAttribute('class')+"' should be type "+gettype(inputs[i].getAttribute('data-t')));
+                            return -1;
+                        }
+                        text=text+''+inputs[i].getAttribute('class')+'='+inputs[i].value;
+                    }
+                    var items = document.getElementsByClassName(inputs[i].getAttribute('class'));
+                    for (var j=0; j<items.length; j++){
+                        items[j].setAttribute('data',inputs[i].value);
+                        items[j].value=inputs[i].value;
+                    }
+                }
+            }
+        }
+        var i1;
+        if (z==0 && closeall()==-1) return -1;
+        while (text.length>60){
+            i1=60;
+            while (i1>=0 && (text.charAt(i1)!=',' || insideComma(text,i1) )) i1--;
+            AJAX('writeline.php',x.toUpperCase()+text.substring(0,i1),1,1,1,0);
+            text = " "+text.substring(i1+1);
+        }
+        if (z==1) {if (text!='') {
+            document.getElementById('command').value=x.toUpperCase()+text;
+            AJAX('writeline.php',x.toUpperCase()+text,1,1,1,0);
+        }}
+        else {
+            document.getElementById('command').value=x+text;
+            AJAX('writeline.php',x+text,1,1,1,0);
+        }
+    }
+    function AJAX(url,data,get,asy,clear,funct){
+        /* request and post commands to server */
+        if (clear) {
+            document.getElementById('command').value='';
+            var doc = document.getElementById('text').contentWindow.document;
+            prefix=''; variable='';
+            doc.body.innerText+="command:"+data+"\n";
+            document.getElementById('text').contentWindow.scrollTo(0,999999);
+        }
+        
+        var page_request = false
+        if (window.XMLHttpRequest) // if Mozilla, Safari etc
+            page_request = new XMLHttpRequest();
+        else if (window.ActiveXObject){ // if older IE
+            try {page_request = new ActiveXObject("Msxml2.XMLHTTP")}catch (e){
+                try{page_request = new ActiveXObject("Microsoft.XMLHTTP")}catch (e){}
+            }
+        }
+        else return false
+        
+        if(asy){
+            page_request.onreadystatechange=function(){
+                if (page_request.readyState==4 && page_request.status==200){
+                    var str=""; try{str+=page_request.responseText;}catch(err){};
+                    var doc = document.getElementById('text').contentWindow.document;
+                    if (str!='') {
+                        while (str.indexOf("#")!=-1) str = processcmd(str);
+                        if (str!=''){
+                            while (str!=''){
+                                doc.body.innerText+=str.substring(0,80)+"\n";
+                                str = str.substring(80);
+                            }
+                            document.getElementById('text').contentWindow.scrollTo(0,999999);
+                        }
+                    }
+                }
+            };
+        }
+        if (!get) page_request.open('POST', url, asy);
+        else if (data=='') page_request.open('GET', url, asy);
+        else if (funct==0) page_request.open('GET', url+"?cmd='"+data+"'", asy);
+        else page_request.open('GET', url+"?"+data, asy);
+        page_request.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+        page_request.send(data);
+        if (url=='writeline.php') active = 1;
+        var strResult='';
+        if (!asy) strResult=page_request.responseText;
+        return strResult;
+    }
+    function openFile(event){
+        /* load WebGL object to display from local machine */
+        input = event.target;
+        var istr = input.value;
+        if (istr.indexOf('.gpu')==-1) {
+            alert("Can only load *.gpu files");
+            input.value='';
+            return;
+        }
+        AJAX2(-1*parseInt(input.id[10])-1);
+    }
+    function AJAX2(k){
+        /* request WebGL data from server for gpu display */
+        /* or read WebGL data from local file */
+        var local = 0, oReq;
+        if (k<0){
+            k=-k-1;
+            local = 1;
+        }
+        if (local==0) {
+            oReq = new XMLHttpRequest();
+            oReq.open("GET", "data"+k+".gpu", true);
+            oReq.responseType = "arraybuffer";
+        }
+        else oReq = new FileReader();
+        oReq.onload = function (oEvent) {
+            var arrayBuffer;
+            if (local==0) arrayBuffer = oReq.response;
+            else arrayBuffer = oReq.result;
+            var csize = 1;
+            if (arrayBuffer) {
+                var argv = new Int32Array(arrayBuffer, 0, 20);
+                var ts = 9; offset = 80;
+                for (var i=1;i<11;i++){
+                    if (i%2==0) ts = 6;
+                    else ts = 9;
+                    vertices[k][i-1] = new Float32Array(arrayBuffer, offset, ts * argv[i-1]);
+                    offset += 4 * ts * argv[i-1];
+                }
+                for (var i=1;i<11;i++){
+                    if (i%2==0) ts = 6;
+                    else ts = 9;
+                    colors[k][i-1] = new Uint8Array(arrayBuffer, offset, ts * argv[i+9]);
+                    offset += csize * ts * argv[i+9];
+                }
+                loaddata(k);
+                draw(k);
+            }
+        };
+        if (local==0) oReq.send(null);
+        else{
+          oReq.readAsArrayBuffer(input.files[0]);
+          input.value='';
+        }
+    }
+    function processcmd(str){
+        /* intrepret command from server. Either text to display or command to execute */
+        var cmd, i1, i2, argv, argc, i, key, val;
+        var s = 80, i3=-1;
+        i1 = str.indexOf("#");
+        i2 = i1+1+str.substring(i1+1).indexOf("#");
+        i3 = i1;
+        if (i2!=i1 && i2-i1<=3) {
+            s = 80 * parseInt(str.substring(i1+1,i2));
+            i1 = i2;
+        }
+        if (i1!=-1){
+            cmd = str.substring(i1+1,i3+s);
+            //argv = cmd.split(",");
+            argv = customSplit(cmd);
+            argc = argv.length;
+            if (cmd.substring(0,5)=='image') {
+            /* display a static image */
+                if (argc==5) {
+                    var k = parseInt(argv[3]);
+                    document.getElementById('figure'+argv[3]).width=getWidth(0);
+                    document.getElementById('figure'+argv[3]).height=getWidth(0)*2/3;
+                    if (popped[k]==0) {
+                        releasememory(k);
+                        document.getElementById('cdiv'+(parseInt(argv[3])+3)).style.display='none';
+                        document.getElementById('cdiv'+argv[3]).style.display='inline-block';
+                        document.getElementById('figure'+argv[3]).src='figure'+argv[3]+'.bmp?'+Math.random();
+                    }
+                }
+            }
+            else if (cmd.substring(0,6)=='webgl2') {
+            /* display a dynamic webGL object */
+                if (argc==3) {
+                    var k = parseInt(argv[1]);
+                    if (webgl==0) {
+                        alert ("Unable to initialize WebGL. Enable WebGL in your browser.");
+                        AJAX('callfunct.php','release='+(k+3),1,1,0,1);
+                    }
+                    if (popped[k]==0) {
+                        releasememory2(k);
+                        AJAX2(k);
+                    }
+                    else popped[k]=2;
+                }
+            }
+            else if (cmd.substring(0,6)=='button' && argc==4){
+            /* toggle color of a command button */
+                if (argv[2]!='') {
+                    document.getElementById(argv[1]+'cmd').style.backgroundColor = "#999999";
+                    sbtn[sbtnCT] = argv[1];
+                    sbtnCT++;
+                }
+                else {
+                    document.getElementById(argv[1]+'cmd').style.backgroundColor = "#EEEEEE";
+                    buttonRemove(argv[1]);
+                }
+            }
+            else if (cmd.substring(0,5)=='pause'){
+            /* prompt user to continue */
+                document.getElementById("confirmbutton").style.top = document.body.scrollTop+10;
+                document.getElementById("confirmbutton").style.display="block";
+                document.getElementById("blackout").style.display="";
+            }
+            else if (cmd.substring(0,7)=='animate') {
+            /* changes animate variable */
+                animate = parseInt(argv[1]);
+                setAnimate();
+            }
+            else if (cmd.substring(0,5)=='start'){
+            /* server calls this when it is started */
+                if (active==1) location.reload(); else active = 1;
+            }
+            else if (cmd.substring(0,6)=='unhide'){
+            /* an sg pop out is being pushed back into controls */
+                unhide(parseInt(argv[1]));
+            }
+            else if (cmd.substring(0,4)=='lock'){
+                if (argc==6) lockip(argv);
+            }
+            else if (cmd.substring(0,6)=='update'){
+            /* server is updating variables */
+                for (i=1;i<argc-1;i++){
+                    i2 = argv[i].indexOf("=");
+                    key = argv[i].substring(0,i2);
+                    val = argv[i].substring(i2+1);
+                    update(key,val,1);
+                }
+            }
+            else if (cmd.substring(0,5)=='files' && argc>=2){
+            /* display files on server */
+                var dirnum = parseInt(argv[1]);
+                var newtext = "<html><body> "+variable+" options:<br>";
+                newtext += "<em>Directory ."+prefix.substring(1)+"/</em><br>";
+                if (prefix!='.') newtext += "<a href='javascript:parent.getdir(\"..\");' style='text-decoration:none'>&#160<img src='up.png'>..</a><br>";
+                for (i=2;i<dirnum+2;i++)
+                    newtext+= "<a href='javascript:parent.getdir(\""+argv[i]+"\");' style='text-decoration:none'>&#160<img src='folder.png'>"+argv[i]+"</a><br>";
+                for (i=dirnum+2;i<argc-1;i++)
+                    newtext+= "<a href=\"javascript:parent.setValue2('"+argv[i]+"');\" style='text-decoration:none'>&#160<img src='file.png'>"+argv[i]+"</a><br>";
+                document.getElementById('text3').contentWindow.document.open();
+                document.getElementById('text3').contentWindow.document.write(newtext);
+                document.getElementById('text3').contentWindow.document.close();
+                document.getElementById('text3').contentWindow.scrollTo(0,0);
+                var width = getWidth(0);
+                if (width>600) document.getElementById('text3').contentDocument.body.style.fontSize = width / 35;
+                else document.getElementById('text3').contentDocument.body.style.fontSize = "";
+                document.getElementById('text3').contentWindow.onfocus = enablebuttons;
+                document.getElementById('text3').contentWindow.onblur = disablebuttons;
+            }
+        }
+        return str.substring(0,i3)+str.substring(i3+s);
+    }
+    function customSplit(cmd){
+        /* splits cmd at commas but preserves strings in quotes that include commas */
+        var parts = [];
+        var i1=0, i2, i3, i4=0;
+        i2=cmd.indexOf(",");
+        i3=cmd.indexOf('"');
+        while (i2!=-1){
+            if (i2<i3 || i3==-1) {
+                parts.push(cmd.substring(i1,i2));
+            }
+            else {
+                i4 = cmd.indexOf('"',i3+1);
+                parts.push(cmd.substring(i1,i4+1).replace(/\"/g,""));
+                i2 = i4+1;
+            }
+            i1 = i2+1;
+            i2 = cmd.indexOf(",",i1);
+            i3 = cmd.indexOf('"',i1);
+        }
+        parts.push(cmd.substring(i1));
+        return parts;
+    }
+    function insideComma(text,i1){
+        /* determines if comma at i1 is inside quotes */
+        var inside = -1;
+        var output = false;
+        for (var i=0; i<text.length; i++){
+            if (text.charAt(i)=='"') inside = inside * -1;
+            if (i==i1 && text.charAt(i)==',' && inside==1) output = true;
+        }
+        return output;
+    }
+    function confirmcontinue(){
+        document.getElementById("confirmbutton").style.display="none";
+        document.getElementById("blackout").style.display="none";
+        AJAX('callfunct.php',"continue=1",1,1,0,1);
+    }
+    function resetall(){
+        var inputs = document.getElementsByTagName('input');
+        for (var i=0; i<inputs.length; i++)
+        if (inputs[i].hasAttribute('class'))
+            inputs[i].value=inputs[i].getAttribute('data');
+    }
+    function update(key, val, x){
+        var items = document.getElementsByClassName(key);
+        for (var i=0; i<items.length; i++) {
+            items[i].value=val;
+            if (x==1) items[i].setAttribute('data',val);
+        }
+    }
+    function gettype(c){
+        if (c=='i') return "int";
+        if (c=='r') return "real";
+    }
+    function isint(str){
+        if (str.length==0) return 0;
+        var x=1;
+        for (var i=0;i<str.length;i++){
+            var c = str.charAt(i);
+            if (c!='-' && (c<'0' || c>'9')) x=0;
+        }
+        return x;
+    }
+    function isreal(str){
+        if (str.length==0) return 0;
+        var x=1;
+        for (var i=0;i<str.length;i++){
+            var c = str.charAt(i);
+            if (c!='.' && c!='E' && c!='e' && c!='-' && (c<'0' || c>'9')) x=0;
+        }
+        return x;
+    }
+    function toggle(x){
+        /* show hide parameters */
+        if (document.getElementById(x+"parameters").style.display=='none') {
+            if (closeall()==-1) return;
+            document.getElementById('box').style.border="2px solid red";
+            document.getElementById('box').style.padding="5px";
+            document.getElementById(x+"parameters").style.display='inline';
+            document.getElementById(x+"button").textContent="-";
+        }
+        else closeall();
+    }
+    function toggle2(x){
+        /* show hide non-file options */
+        if (document.getElementById(x+"options").style.display=='none') {
+            closeoptions();
+            var items = document.getElementsByName(x+"radio");
+            var items2 = document.getElementsByClassName(x);
+            var value = items2[0].value;
+            for (var i=0; i<items.length; i++){
+                if (items[i].value==value) items[i].checked=true;
+                else items[i].checked=false;
+            }
+            document.getElementById(x+"options").style.display='block';
+        }
+        else closeoptions();
+    }
+    function toggle3(x){
+        /* show hide file options */
+        if (document.getElementById("text2").style.display=='none'){
+            closeoptions();
+            variable = x; prefix = '.';
+            document.getElementById("text2").style.display='block';
+            getdir('.');
+        }
+        else closeoptions();
+    }
+    function getdir(x){
+        /* get list of files on server */
+        var i, j=-1;
+        if (x=='..'){
+            i = prefix.indexOf("/");
+            while (i!=j){
+                j = i;
+                i = i+1+prefix.substring(i+1).indexOf("/");
+            }
+            if (j!=-1) prefix = prefix.substring(0,j);
+        }
+        else if (x!='' && x!='.') prefix = prefix + "/" + x;
+        AJAX('callfunct.php','listfiles='+prefix,1,1,0,1);
+    }
+    function closefileoptions(){
+        prefix=''; variable='';
+        document.getElementById("text2").style.display='none';
+    }
+    function closeoptions(){
+        closefileoptions();
+        var divs = document.getElementsByTagName('div');
+        for (var i=0; i<divs.length; i++)
+            if (divs[i].id.indexOf('options')!=-1) divs[i].style.display='none';
+    }
+    function closeall(){
+        closeoptions();
+        var divs = document.getElementsByTagName('div');
+        for (var i=0; i<divs.length; i++){
+            if (divs[i].id.indexOf('parameters')!=-1)
+            if (divs[i].style.display=='inline'){
+                var inputs = divs[i].getElementsByTagName('input');
+                for (var j=0; j<inputs.length; j++)
+                if (inputs[j].hasAttribute('class'))
+                    update(inputs[j].getAttribute('class'),inputs[j].value,0);
+                var c = divs[i].id.substring(0,divs[i].id.indexOf('parameters'));
+                if (command(c,1)==-1) return -1;
+                divs[i].style.display='none';
+            }
+        }
+        var buttons = document.getElementsByTagName('button');
+        for (var i=0; i<buttons.length; i++)
+            if (buttons[i].textContent=='-') buttons[i].textContent='+';
+        document.getElementById('box').style.border="";
+        document.getElementById('box').style.padding="";
+    }
+    function setValue(x){
+        /* radio set option */
+        var id=x.name.substring(0,x.name.length-5);
+        var items = document.getElementsByClassName(id);
+        for (var i=0; i<items.length; i++) items[i].value=x.value;
+        closeoptions();
+    }
+    function setValue2(x){
+        /* set fileoption */
+        var items = document.getElementsByClassName(variable);
+        for (var i=0; i<items.length; i++) items[i].value=prefix+"/"+x;
+        closefileoptions();
+        return false;
+    }
+    function buttonColored(cd){
+        var yes = 0;
+        for (var k=0;k<sbtnCT;k++)
+            if (cd==sbtn[k]+'cmd') yes=1;
+        return yes;
+    }
+    function buttonRemove(cd){
+        var idx=-1;
+        for (var k=0;k<sbtnCT;k++)
+            if (cd=sbtn[k]) idx=k;
+        if (idx!=-1) {
+            sbtn[idx]=sbtn[sbtnCT-1];
+            sbtnCT--;
+        }
+    }
+    /***************************************************************************/
+    /* this HTML/CSS/JavaScript/AJAX/WebGL is generated by                     */
+    /* WEBGUI A web browser based graphical user interface                     */
+    /* Version: 1.0 - June 25 2017                                             */
+    /***************************************************************************/
+    /* Copyright (c) 2017, Christopher Deotte                                  */
+    /* Funding: NSF DMS-1345013                                                */
+    /* Documentation: http://ccom.ucsd.edu/~cdeotte/webgui                     */
+    /***************************************************************************/
+    
+    /***************************************************************************/    
+    /* Code for WebGL 3D object display and manipulation below                 */
+    /***************************************************************************/
+    var vertices=[], colors=[];
+    for (var i=0;i<3;i++){
+        vertices[i]=[];
+        colors[i]=[];
+        for (var j=0;j<10;j++){
+            vertices[i][j]=[];
+            colors[i][j]=[];
+        }
+    }
+    var rmatrix=[], rmatrix_old=[], zoom=[1,1,1], x_trans=[0,0,0], y_trans=[0,0,0];
+    rmatrix_old[0]=[], rmatrix_old[1]=[], rmatrix_old[2]=[];
+    rmatrix[0]=[1,0,0,0,1,0,0,0,1], rmatrix[1]=[1,0,0,0,1,0,0,0,1], rmatrix[2]=[1,0,0,0,1,0,0,0,1];
+    var canvas=[], gl=[]; popped=[0,0,0];
+    var vertex_buffer=[], color_buffer=[];
+    var vertCode, vertShader=[], fragCode, fragShader=[], shaderProgram=[];
+    var vertCode2, vertShader2=[], fragCode2, fragShader2=[], shaderProgram2=[];
+    var coord = [], color = [], M1 = [], V1 = [];
+    var coord2 = [], M2 = [], V2 = [];
+    var drawing=[0,0,0], drag=[], old_x=[], old_y=[];
+    var old2_x=[0,0,0], old2_y=[0,0,0], old3_x=[0,0,0], old3_y=[0,0,0];
+    var oldtimestamp=[0,0,0], stopspin=[1,1,1];
+    var old_dx=[-3,-3,-3], old_dy=[6,6,6], old_u=[], old_d=[-1,-1,-1];
+    old_u[0]=[0.7071,0.7071,0], old_u[1]=[0.7071,0.7071,0], old_u[2]=[0.7071,0.7071,0];
+    var identity = new Float32Array([1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0]);
+    var webgl=0, sg=-1, ikey=-1, fkey=-1, ekey=-1, wkey=1, focus = 0, animate=0, reset=0;
+    var timerId=0, pane=-1, pkey=-1, btnfix=0;
+    if (isMobile) wkey = -1;
+    var optionkey=0, commandkey=0;
+    
+    for (var i=0; i<3; i++){
+        /* prepare the canvas and get webgl context */
+        canvas[i] = document.getElementById('my_Canvas'+i);
+        gl[i] = canvas[i].getContext('webgl') || canvas[i].getContext('experimental-webgl');
+        if (!gl[i]) {
+            for (var k=0;k<3;k++){
+                document.getElementById('cdiv'+k).style.display='inline-block';
+                document.getElementById('cdiv'+(k+3)).style.display='none';
+            }
+            document.getElementById('webGLcontrols').style.display='none';
+            
+        }
+        else{
+            /* store geometry and colors in buffer objects */
+            webgl = 1;
+            vertex_buffer[i] = [];
+            color_buffer[i] = [];
+            for (var k=0; k<10; k++){
+                vertex_buffer[i][k] = gl[i].createBuffer();
+                color_buffer[i][k] = gl[i].createBuffer();
+            }
+            loaddata(i);
+
+            /* create and compile shader programs */
+            vertCode =
+                'attribute vec3 coordinates;' +
+                'attribute vec3 color;' +
+                'varying mediump vec3 vColor;' +
+                'uniform mat3 M1;' +
+                'uniform vec3 V1;' +
+                'void main(void) {' +
+                    ' gl_Position = vec4( M1 * coordinates + V1, 1.0);' +
+                    ' gl_Position.z = 0.0001 * gl_Position.z;' +
+                    ' vColor = color;' +
+                '}';
+            vertShader[i] = gl[i].createShader(gl[i].VERTEX_SHADER);
+            gl[i].shaderSource(vertShader[i], vertCode);
+            gl[i].compileShader(vertShader[i]);
+            fragCode =
+                'varying mediump vec3 vColor;' +
+                'void main(void) {' +
+                    ' gl_FragColor = vec4(vColor, 1.0);' +
+                '}';
+            fragShader[i] = gl[i].createShader(gl[i].FRAGMENT_SHADER);
+            gl[i].shaderSource(fragShader[i], fragCode);
+            gl[i].compileShader(fragShader[i]);
+            shaderProgram[i] = gl[i].createProgram();
+            gl[i].attachShader(shaderProgram[i], vertShader[i]);
+            gl[i].attachShader(shaderProgram[i], fragShader[i]);
+            gl[i].linkProgram(shaderProgram[i]);
+            
+            vertCode2 =
+                'attribute vec3 coordinates;' +
+                'uniform mat3 M1;' +
+                'uniform vec3 V1;' +
+                'void main(void) {' +
+                    ' gl_Position = vec4( M1 * coordinates + V1, 1.0);' +
+                    ' gl_Position.z = 0.0001 * gl_Position.z;' +
+                '}';
+            vertShader2[i] = gl[i].createShader(gl[i].VERTEX_SHADER);
+            gl[i].shaderSource(vertShader2[i], vertCode2);
+            gl[i].compileShader(vertShader2[i]);
+            fragCode2 =
+                'void main(void) {' +
+                    ' gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);' +
+                '}';
+            fragShader2[i] = gl[i].createShader(gl[i].FRAGMENT_SHADER);
+            gl[i].shaderSource(fragShader2[i], fragCode2);
+            gl[i].compileShader(fragShader2[i]);
+            shaderProgram2[i] = gl[i].createProgram();
+            gl[i].attachShader(shaderProgram2[i], vertShader2[i]);
+            gl[i].attachShader(shaderProgram2[i], fragShader2[i]);
+            gl[i].linkProgram(shaderProgram2[i]);
+
+            
+            /* get shader programs variable references */
+            coord[i] = gl[i].getAttribLocation(shaderProgram[i], "coordinates");
+            color[i] = gl[i].getAttribLocation(shaderProgram[i], "color");
+            M1[i] = gl[i].getUniformLocation(shaderProgram[i], "M1");
+            V1[i] = gl[i].getUniformLocation(shaderProgram[i], "V1");
+            
+            coord2[i] = gl[i].getAttribLocation(shaderProgram2[i], "coordinates");
+            M2[i] = gl[i].getUniformLocation(shaderProgram2[i], "M1");
+            V2[i] = gl[i].getUniformLocation(shaderProgram2[i], "V1");
+            
+            /* draw the 5 frames/lists with their polygons and lines */
+            draw(i);
+            
+            /* Add mouse rotation, scale, translation controls */
+            drag[i] = -1; old_x[i] = 0; old_y[i] = 0;
+            canvas[i].addEventListener("contextmenu",contextMenu,false);
+            canvas[i].addEventListener("mousedown", mouseDown, false);
+            canvas[i].addEventListener("mouseup", mouseUp, false);
+            canvas[i].addEventListener("mouseout", mouseUp, false);
+            canvas[i].addEventListener("mousemove", mouseMove, false);
+        }
+    }
+    document.addEventListener("keydown", keyDown, false);
+    document.addEventListener("keyup", keyUp, false);
+    document.getElementById("figure0").addEventListener("mousedown", mouseDown2, false);
+    document.getElementById("figure0").addEventListener("contextmenu",function(e){e.preventDefault();return false;},false);
+    document.getElementById("figure1").addEventListener("mousedown", mouseDown2, false);
+    document.getElementById("figure2").addEventListener("mousedown", mouseDown2, false);
+    
+    function loaddata(k){
+        /* move gpu data from javascript into gpu */
+        if (webgl==0) return;
+        if (animate==0) resetposition(k);
+        if (animate>=4 && animate<=6 && reset==1) resetposition(k);
+        for (var i=0; i<10; i++){
+            gl[k].bindBuffer(gl[k].ARRAY_BUFFER, vertex_buffer[k][i]);
+            gl[k].bufferData(gl[k].ARRAY_BUFFER, vertices[k][i], gl[k].STATIC_DRAW);
+            gl[k].bindBuffer(gl[k].ARRAY_BUFFER, null);
+            gl[k].bindBuffer(gl[k].ARRAY_BUFFER, color_buffer[k][i]);
+            gl[k].bufferData(gl[k].ARRAY_BUFFER, colors[k][i], gl[k].STATIC_DRAW);
+            gl[k].bindBuffer(gl[k].ARRAY_BUFFER, null);
+        }
+    }
+    function draw(k){
+        // draws all the objects
+        if (webgl==0) return;
+        gl[k].clearColor(1.0, 1.0, 1.0, 1.0);
+        gl[k].enable(gl[k].DEPTH_TEST);
+        gl[k].clear(gl[k].COLOR_BUFFER_BIT);
+        gl[k].viewport(0, 0, canvas[k].width, canvas[k].height);
+        if (getobjectcount(k)==0) return;
+        
+        /* Mouse rotation, scale, and translation */
+        /* position = scale * (scale2 * rotate2  * (coordinates + translate2) + translate) + translate3 */
+        /* p = vA * (vB * mC * (x + vE) + vD) + vF  */
+        /* Note: VertexShader multiplies vectors on left of matrices */
+        
+        var vA=[], vB=[], mC=[], vD=[], vE=[], vF=[], mG=[], vH=[];
+        vA=[zoom[k],zoom[k],zoom[k]];
+        mC=rmatrix[k];
+        vD=[2.0*x_trans[k]/canvas[k].width,-2.0*y_trans[k]/canvas[k].height,0];
+        vE=[-0.5,-0.5,-0.5];
+        
+        /* draw polygons and lines for frames/lists 5,3,2,4,1 */
+        for (var i=0;i<5;i++){
+            if (i==0 || i==3 || i==4){
+                vF=[-1/3,0,0];
+                vB=[4/3,2,-2];
+            }
+            else if (i==1){
+                vF=[2/3,-0.5,0.02];
+                vB=[2/3,1,-1];
+                mC=[1,0,0,0,1,0,0,0,1];
+                vD=[0,0,0];
+                vC=[1,1,1];
+                vA=[1,1,1];
+            }
+            else{
+                vF=[2/3,0.5,0.02];
+                vB=[2/3,1,-1];
+            }
+            mG = matrix_scale2( mC, vect_mult(vA,vB) );
+            vH = vect_add( vect_add( matrix_vector_mult2(mG,vE), vect_mult(vA,vD) ), vF);
+            if (vertices[k][2*i].length!=0){
+                gl[k].useProgram(shaderProgram[k]);
+                gl[k].uniformMatrix3fv(M1[k],false,new Float32Array(mG));
+                gl[k].uniform3f(V1[k],vH[0],vH[1],vH[2]);
+                gl[k].bindBuffer(gl[k].ARRAY_BUFFER, vertex_buffer[k][2*i]);
+                gl[k].vertexAttribPointer(coord[k], 3, gl[k].FLOAT, false, 0, 0);
+                gl[k].enableVertexAttribArray(coord[k]);
+                gl[k].bindBuffer(gl[k].ARRAY_BUFFER, color_buffer[k][2*i]);
+                gl[k].vertexAttribPointer(color[k], 3, gl[k].UNSIGNED_BYTE, true, 0, 0);
+                gl[k].enableVertexAttribArray(color[k]);
+                gl[k].drawArrays(gl[k].TRIANGLES, 0, vertices[k][2*i].length/3);
+            }
+            if (i==3) vH[2] += 0.01;
+            else vH[2] += -0.01;
+            if (vertices[k][2*i+1].length!=0){
+                if (colors[k][2*i+1].length!=0){
+                    gl[k].useProgram(shaderProgram[k]);
+                    gl[k].uniformMatrix3fv(M1[k],false,new Float32Array(mG));
+                    gl[k].uniform3f(V1[k],vH[0],vH[1],vH[2]);
+                    gl[k].bindBuffer(gl[k].ARRAY_BUFFER, vertex_buffer[k][2*i+1]);
+                    gl[k].vertexAttribPointer(coord[k], 3, gl[k].FLOAT, false, 0, 0);
+                    gl[k].enableVertexAttribArray(coord[k]);
+                    gl[k].bindBuffer(gl[k].ARRAY_BUFFER, color_buffer[k][2*i+1]);
+                    gl[k].vertexAttribPointer(color[k], 3, gl[k].UNSIGNED_BYTE, true, 0, 0);
+                    gl[k].enableVertexAttribArray(color[k]);
+                    gl[k].drawArrays(gl[k].LINES, 0, vertices[k][2*i+1].length/3);
+                }
+                else{
+                    /* this shader only draws black */
+                    gl[k].useProgram(shaderProgram2[k]);
+                    gl[k].uniformMatrix3fv(M2[k],false,new Float32Array(mG));
+                    gl[k].uniform3f(V2[k],vH[0],vH[1],vH[2]);
+                    gl[k].bindBuffer(gl[k].ARRAY_BUFFER, vertex_buffer[k][2*i+1]);
+                    gl[k].vertexAttribPointer(coord2[k], 3, gl[k].FLOAT, false, 0, 0);
+                    gl[k].enableVertexAttribArray(coord2[k]);
+                    gl[k].drawArrays(gl[k].LINES, 0, vertices[k][2*i+1].length/3);
+                }
+            }
+        }
+        /* display how many triangles and lines were drawn */
+        var tri=(vertices[k][0].length+vertices[k][2].length+vertices[k][4].length+vertices[k][6].length+vertices[k][8].length)/9;
+        var lin=(vertices[k][1].length+vertices[k][3].length+vertices[k][5].length+vertices[k][7].length+vertices[k][9].length)/6;
+        document.getElementById('textD'+(k+3)).innerHTML = '&#160 '+tri+' tri, '+lin+' lin';
+        drawing[k] = 0;
+    }
+    function getobjectcount(k){
+        var count = 0;
+        for (var i=0;i<10;i++) count += vertices[k][i].length;
+        return count;
+    }
+    function resetposition(k){
+        /* reset WebGL object position */
+        rmatrix[k]=[1,0,0,0,1,0,0,0,1];
+        zoom[k]=1;
+        x_trans[k]=0;
+        y_trans[k]=0;
+        if (ikey==1) updateInfo();
+    }
+    function releasememory(k){
+        /* request server to free WebGL data and release locally */
+        if (webgl==0) return;
+        gl[k].clearColor(1.0, 1.0, 1.0, 1.0);
+        gl[k].enable(gl[k].DEPTH_TEST);
+        gl[k].clear(gl[k].COLOR_BUFFER_BIT);
+        gl[k].viewport(0, 0, canvas[k].width, canvas[k].height);
+        document.getElementById('textD'+(k+3)).innerHTML = '&#160 0 tri, 0 lin';
+        for (var j=0;j<10;j++){
+            vertices[k][j]=[];
+            colors[k][j]=[];
+        }
+        AJAX('callfunct.php','release='+(k+3),1,1,0,1);
+    }
+    function releasememory2(k){
+        /* request server to free image data and release locally */
+        if (webgl!=0){
+            document.getElementById('cdiv'+k).style.display='none';
+            document.getElementById('cdiv'+(k+3)).style.display='inline-block';
+        }
+        AJAX('callfunct.php','release='+k,1,1,0,1);
+        document.getElementById('figure'+k).src='figure'+k+'.bmp?'+Math.random();
+    }
+    function getHeight() {
+        /* get browser height */
+        var h=0;
+        if (self.innerHeight) h = self.innerHeight;
+        else if (document.documentElement && document.documentElement.clientHeight)
+            h = document.documentElement.clientHeight;
+        else if (document.body) h = document.body.clientHeight;
+        return h;
+    }
+    function getWidth(actual) {
+        /* get browser width/2 */
+        var w=0;
+        if (self.innerWidth) w = self.innerWidth;
+        else if (document.documentElement && document.documentElement.clientWidth)
+            w = document.documentElement.clientWidth;
+        else if (document.body) w = document.body.clientWidth;
+        if (wkey==-1) return w-50;
+        if (sg==1 && actual==0) {
+            w = w - 50;
+            var h = getHeight()-30;
+            h = 1.5 * h;
+            if (h<w && popped[0]*popped[1]*popped[2]==0) w = h;
+            return w;
+        }
+        return (w-50)/2;
+    }
+    function resizecanvas(){
+        /* rescale so 4 canvas fit in web browser */
+        var width = getWidth(0);
+        if (width<300) width=300;
+        height = width*2/3;
+        var doc1 = document.getElementById("controls");
+        doc1.style.width = width;
+        doc1.style.height = height;
+        var factor = 800; if (isChrome) factor = 600;
+        document.getElementById("command").size = 80 * width / factor;
+        if (firstresize==1){
+            firstresize=0;
+            for (var i=0;i<3;i++){
+                if (sg!=1 && getobjectcount(i)==0 && document.getElementById('figure'+i).height > 1){
+                    document.getElementById("cdiv"+i).style.display = "inline-block";
+                    document.getElementById("cdiv"+(i+3)).style.display = "none";
+                }
+            }
+        }
+        var h1 = document.getElementById("head");
+        if (!h1 || h1.style.display=='none'){
+            var h2 = document.getElementById("head2");
+            if (wkey==-1) h2.style.display='inline-block';
+            else h2.style.display='block';
+        }
+        for (var i=0;i<3;i++){
+            if (webgl!=0){
+                canvas[i].width = width;
+                canvas[i].height = height;
+            }
+            document.getElementById("cdiv"+(i+3)).style.width = width;
+            document.getElementById('figure'+i).width = width;
+            document.getElementById('figure'+i).height = height;
+            document.getElementById("cdiv"+i).style.width = width;
+            draw(i);
+        }
+        var w = 25;
+        if (width>600) w = width/20;
+        document.getElementById("confirmbutton").style.fontSize = w;
+        var btndivs = document.getElementsByClassName("btn");
+        for (var i=0;i<btndivs.length;i++){
+            btndivs[i].style.paddingRight = width / 60;
+            if (isSafari) btndivs[i].style.paddingRight = 0;
+            var btns = btndivs[i].getElementsByTagName("button");
+            for (var j=0;j<btns.length;j++){
+                if (width>600) {
+                    btns[j].style.fontSize = width / 40;
+                    btns[j].style.color = "#333333";
+                    btns[j].style.borderRadius = "10px";
+                    btns[j].style.backgroundColor = "#EEEEEE";
+                    if (buttonColored(btns[j].id)==1) btns[j].style.backgroundColor = "#999999";
+                }
+                else {
+                    btns[j].style.fontSize = "";
+                    btns[j].style.color = "";
+                    btns[j].style.borderRadius = "8px";
+                    btns[j].style.backgroundColor = "#EEEEEE";
+                    if (buttonColored(btns[j].id)==1) btns[j].style.backgroundColor = "#999999";
+                }
+            }
+            
+            var divs = document.getElementsByTagName("div");
+            for (var j=0;j<divs.length;j++){
+                if (divs[j].id.indexOf("parameters")!=-1 || divs[j].id.indexOf("options")!=-1) {
+                    if (width>600) divs[j].style.fontSize = width / 35;
+                    else divs[j].style.fontSize = "";
+                    var descendants = divs[j].querySelectorAll("*");
+                    for (var k=0;k<descendants.length;k++){
+                        if (width>600) {
+                            if (descendants[k].tagName=="BUTTON" || descendants[k].tagName=="INPUT")
+                                descendants[k].style.fontSize = width / 40;
+                            else descendants[k].style.fontSize = width / 35;
+                        }
+                        else descendants[k].style.fontSize = "";
+                    }
+                }
+            }
+            
+        }
+        resizeframe();
+        if (ikey==1) updateInfo();
+        var t3 = document.getElementById("text3");
+        if (width>600) {
+            document.getElementById("text").contentDocument.body.style.fontSize = width / 35;
+            if (t3) t3.contentDocument.body.style.fontSize = width / 35;
+            document.getElementById("head2").style.fontSize = width / 35;
+        }
+        else {
+            document.getElementById("text").contentDocument.body.style.fontSize = "";
+            if (t3) t3.contentDocument.body.style.fontSize = "";
+            document.getElementById("head2").style.fontSize = "";
+        }
+        if (animate<-1){
+            var map=[5,6,4];
+            animate = map[-animate-2];
+            reset = 1;
+        }
+        var txt = "INTERACTIVE MODE: Frame rate = "+(animate*10)+" fps. Key and mouse presses sent to server.";
+        if (animate==4) txt = "INTERACTIVE MODE: Key and mouse presses sent to server.";
+        if (animate==5) txt = "INTERACTIVE MODE: Key presses sent to server.";
+        if (animate==6) txt = "INTERACTIVE MODE: Mouse presses sent to server.";
+        if (animate>6) txt = "ANIMATION MODE: Frame rate = "+((animate-6)*10)+" fps.";
+        if (animate>0) document.getElementById("animate").innerHTML = txt;
+        else document.getElementById("animate").innerHTML="";
+    }
+    function resizeframe(){
+        /* rescale out text frame */
+        var h1 = document.getElementById("head");
+        var dy = document.getElementById("head2").clientHeight;
+        if (h1 && h1.style.display!='none') dy = h1.clientHeight;
+        document.getElementById("text").height=document.getElementById("controls").clientHeight-dy;
+        document.getElementById("text").width=document.getElementById("controls").clientWidth-10;
+        var width = getWidth(0);
+        if (width<300) width=300;
+        var extra = 0;
+        if (isSafari) extra = 20;
+        document.getElementById("blackout").style.height = dy + extra;
+        document.getElementById("blackout").style.width = width;
+    }
+    function hide(k){
+        /* popping out a WebGL display */
+        document.getElementById("controls").style.display = "none";
+        for (var i=0;i<3;i++){
+            document.getElementById("cdiv"+i).style.display = "none";
+            if (i!=k) document.getElementById("cdiv"+(i+3)).style.display = "none";
+        }
+        document.getElementById("pop"+k).innerHTML = "Push";
+        document.getElementById("pop"+k).onclick = function() { push(k); };
+    }
+    function unhide(k){
+        /* pushing a WebGL display into controls */
+        if (webgl!=0) document.getElementById("cdiv"+(k+3)).style.display = "inline-block";
+        else document.getElementById("cdiv"+k).style.display = "inline-block";
+        sg = -1;
+        resizecanvas();
+        if (popped[k]==2) AJAX2(k);
+        popped[k]=0;
+    }
+    function pop(k){
+        /* popping out a WebGL display */
+        window.open('sg?x='+k);
+        document.getElementById("cdiv"+k).style.display = "none";
+        document.getElementById("cdiv"+(k+3)).style.display = "none";
+        document.getElementById("filechoice"+k).style.display = "none";
+        popped[k]=1;
+        if (popped[0]>0 && popped[1]>0 && popped[2]>0) {
+            sg = 1;
+            resizecanvas();
+        }
+    }
+    function save(k){
+        /* saving WebGL object as either gpu binary data or text */
+        if (optionkey==1) window.open('data'+k+'.js?xtra=1');
+        else window.open('data'+k+'.gpu');
+    }
+    function push(k){
+        /* popping out a WebGL display */
+        AJAX('callfunct.php','push='+k,1,1,0,1);
+        setTimeout(function(){window.close();},100);
+    }
+    function matrix_quaternion3(theta,x1,y1,x2,y2,k){
+        var x3 = x2-x1;
+        var y3 = y2-y1;
+        var d3 = Math.sqrt(x3*x3+y3*y3);
+        if (d3==0 || theta==0) return [1,0,0,0,1,0,0,0,1];
+        x3 = x3/d3;
+        y3 = y3/d3;
+        var dot = x2*x3+y2*y3;
+        var x4 = x2 - dot*x3;
+        var y4 = y2 - dot*y3;
+        var d4 = Math.sqrt(x4*x4+y4*y4);
+        var d5 = 0;
+        if (d4<1) d5 = Math.sqrt(1-d4*d4);
+        else d4 = 1;
+        var z = x2*y3-x3*y2;
+        old_d[k] = 1;
+        if (z>0) old_d[k] = -1;
+        var u = [d5*x4/d4,d5*y4/d4,-d4];
+        u = normalize(u);
+        old_u[k] = u;
+        return matrix_quaternion4(theta,u,old_d[k]);
+    }
+    function matrix_quaternion4(theta,u,d){
+        theta = theta*d;
+        var s = Math.sin(theta/2);
+        var qr = Math.cos(theta/2);
+        var qi = s*u[0];
+        var qj = s*u[1];
+        var qk = s*u[2];
+        var qi2 = qi*qi;
+        var qj2 = qj*qj;
+        var qk2 = qk*qk;
+        var qiqj = qi*qj;
+        var qkqr = qk*qr;
+        var qiqk = qi*qk;
+        var qjqr = qj*qr;
+        var qjqk = qj*qk;
+        var qiqr = qi*qr;
+        var result = [
+            1-2*(qj2+qk2), 2*(qiqj+qkqr), 2*(qiqk-qjqr),
+            2*(qiqj-qkqr), 1-2*(qi2+qk2), 2*(qjqk+qiqr),
+            2*(qiqk+qjqr), 2*(qjqk-qiqr), 1-2*(qi2+qj2)
+        ];
+        return result;
+    }
+    function normalize(x){
+        var s = Math.sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2]);
+        var result = [x[0]/s, x[1]/s, x[2]/s];
+        return result;
+    }
+    function matrix_matrix_mult(mx,ax){
+        var r1=[mx[0],mx[1],mx[2]];
+        var r2=[mx[3],mx[4],mx[5]];
+        var r3=[mx[6],mx[7],mx[8]];
+        var c1=[ax[0],ax[3],ax[6]];
+        var c2=[ax[1],ax[4],ax[7]];
+        var c3=[ax[2],ax[5],ax[8]];
+        var result=[dp(r1,c1), dp(r1,c2), dp(r1,c3), dp(r2,c1), dp(r2,c2), dp(r2,c3), dp(r3,c1), dp(r3,c2), dp(r3,c3)];
+        return result;
+    }
+    function matrix_vector_mult2(mx,x){
+    /* Left multiply 3x3 maxtrix mx by vector x */
+        var c1=[mx[0],mx[3],mx[6]];
+        var c2=[mx[1],mx[4],mx[7]];
+        var c3=[mx[2],mx[5],mx[8]];
+        var result=[dp(c1,x), dp(c2,x), dp(c3,x)];
+        return result;
+    }
+    function matrix_scale2(mx,x){
+        var result = [x[0]*mx[0], x[1]*mx[1], x[2]*mx[2], x[0]*mx[3], x[1]*mx[4], x[2]*mx[5], x[0]*mx[6], x[1]*mx[7], x[2]*mx[8]];
+        return result;
+    }
+    function vect_add(x,y){
+        var result = [x[0]+y[0], x[1]+y[1], x[2]+y[2]];
+        return result;
+    }
+    function vect_mult(x,y){
+        var result = [x[0]*y[0], x[1]*y[1], x[2]*y[2]];
+        return result;
+    }
+    function dp(x,y){
+    /* Calculate the dot product of R3 vectors x and y */
+        return x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
+    }
+    function updateInfo(){
+        var mid = document.getElementById("mouseinfodiv");
+        var k = focus;
+        var w = getWidth(0);
+        if (w<300) w=300;
+        var h = 2/3 * w + 30;
+        if (k==0 && sg!=1){
+            w = 2*w;
+            h = 0;
+        }
+        else if (k==2 && sg!=1) w = 2*w;
+        if (sg==1) {
+            h=0;
+            w = 2 * getWidth(1);
+        }
+        var x = 1.5 * x_trans[k]/canvas[k].width;
+        var y = -y_trans[k]/canvas[k].height;
+        var txt = "<u>Pane "+focus+" info:</u><br><br>";
+        txt += "zoom = "+zoom[k].toFixed(2)+"<br><br>";
+        var p = Math.floor(Math.log(zoom[k])/2.3)+2;
+        txt += "x shift = "+x.toFixed(p)+"<br><br>";
+        txt += "y shift = "+y.toFixed(p)+"<br><br>";
+        txt += "rotation matrix = <br>";;
+        txt += "<table>";
+        txt += "<tr><td>"+rmatrix[k][0].toFixed(2)+"</td><td>"+rmatrix[k][1].toFixed(2)+"</td><td>"+rmatrix[k][2].toFixed(2)+"</td></tr>";
+        txt += "<tr><td>"+rmatrix[k][3].toFixed(2)+"</td><td>"+rmatrix[k][4].toFixed(2)+"</td><td>"+rmatrix[k][5].toFixed(2)+"</td></tr>";
+        txt += "<tr><td>"+rmatrix[k][6].toFixed(2)+"</td><td>"+rmatrix[k][7].toFixed(2)+"</td><td>"+rmatrix[k][8].toFixed(2)+"</td></tr>";
+        txt += "</table>";
+        mid.innerHTML = txt;
+        mid.style.left = w - 100;
+        mid.style.top = h + 20;
+        mid.style.display = "inline-block";
+    }
+    function setAnimate(){
+        var extra = '';
+        if (sg==1) extra = '?x='+pane;
+        if (animate>0) {
+            document.getElementById('animate').innerHTML="INTERACTIVE MODE";
+            if (timerId!=0){
+                clearInterval(timerId);
+                var txt = "INTERACTIVE MODE: ";
+                var txt2 = "Key and mouse presses sent to server.";
+                var fps = "Frame rate = 10 fps. "; var callrate=100;
+                if (animate==2 || animate==8){fps = "Frame rate = 20 fps. "; callrate=50;}
+                else if (animate==3 || animate==9){fps = "Frame rate = 30 fps. "; callrate=33;}
+                else if (animate==4){fps = ""; callrate=500;}
+                else if (animate==5){fps = ""; callrate=500; txt2 = "Key presses sent to server.";}
+                else if (animate==6){fps = ""; callrate=500; txt2 = "Mouse presses sent to server.";}
+                timerId = setInterval("AJAX('readline.php"+extra+"','',1,1,0,0)",callrate);
+                if (animate>=7 && animate<=9) {txt="ANIMATION MODE: "; txt2="";}
+                document.getElementById('animate').innerHTML=txt+fps+txt2;
+            }
+        }
+        else {
+            document.getElementById('animate').innerHTML="";
+            if (timerId!=0){
+                clearInterval(timerId);
+                timerId = setInterval("AJAX('readline.php"+extra+"','',1,1,0,0)",500);
+            }
+        }
+        if (animate<=0 || animate>=6) document.getElementById('lastkey').innerHTML="";
+        if (animate<=0 || animate==5 || animate>=7) document.getElementById('lastmse').innerHTML="";
+    }
+    function keyDown(e){
+        var key = e.keyCode;
+        if (animate>0 && animate<=5 && document.activeElement.tagName!="INPUT") {
+            AJAX('writeline.php',"cmd='key code="+key+"'",1,1,0,1);
+            document.getElementById('lastkey').innerHTML = "(last pressed key: code = "+key+")";
+            var extra = ''; if (sg==1) extra = '?x='+pane;
+            if (animate!=2 && animate!=3) setTimeout("AJAX('readline.php"+extra+"','',1,1,0,0)",20);
+        }
+        if (key==67 && optionkey){ //c-key
+            var h1 = document.getElementById("head");
+            if (!h1) return;
+            var h2 = document.getElementById("head2");
+            if (h1.style.display=='none'){
+                h1.style.display='inline-block';
+                h2.style.display='none';
+                AJAX('callfunct.php','query=1',1,1,0,1);
+            }
+            else{
+                if (closeall()==-1) return;
+                h1.style.display='none';
+                h2.style.display='inline-block';
+                AJAX('callfunct.php','query=0',1,1,0,1);
+            }
+            resizecanvas();
+        }
+        else if (key==73 && optionkey && webgl==1) { //i-key
+            ikey *= -1;
+            if (ikey==1) updateInfo();
+            else document.getElementById("mouseinfodiv").style.display = "none";
+        }
+        else if (key==87 && optionkey) { //w-key
+            wkey *= -1;
+            resizecanvas();
+        }
+        else if (key==82 && optionkey) { //r-key
+            if (animate==0) {animate=-1; reset=0; alert('Now new WebGL objects will NOT reset position.'); }
+            else if (reset==1) {reset=0; alert('Now new WebGL objects will NOT reset position.'); }
+            else if (animate==-1) {animate=0; reset=1; alert('Now new WebGL objects WILL reset position.'); }
+            else if (animate>=4 && animate<=6) {reset=1; alert('Now new WebGL objects WILL reset position.'); }
+        }
+        else if (key==80 && optionkey) pkey = 1; //p-key
+        else if (key>=48 && key<=57 && optionkey && pkey==1){ //0,1,2,3,4,5,6,7,8,9-key
+            animate = key-48;
+            var codes = [0,5,6,4,1,2,3,7,8,9];
+            animate = codes[animate];
+            AJAX('callfunct.php','animate='+animate,1,1,0,1);
+            setAnimate();
+        }
+        else if (key==70 && optionkey){ //f-key
+            fkey *= -1;
+            AJAX('callfunct.php','firewall='+(fkey+1),1,1,0,1);
+            if (fkey==1) document.getElementById('locked').innerHTML = "FIREWALL ON: Only your ip address can access webgui.";
+            else document.getElementById('locked').innerHTML = "";
+        }
+        else if (key==69 && optionkey && webgl==1){ //e-key
+            ekey *= -1;
+            AJAX('callfunct.php','endian='+(ekey+1),1,1,0,1);
+            if (ekey==1) document.getElementById('endian').style.display="block";
+            else document.getElementById('endian').style.display="none";
+        }
+        else if (key==18) optionkey = 1;
+        else if (key==91 || key==93 || key==224) commandkey = 1;
+        if (key!=80 && key!=18 && optionkey==1) pkey = -1;
+    }
+    function lockip(argv){
+        var ip = "("+argv[1]+"."+argv[2]+"."+argv[3]+"."+argv[4]+")";
+        if (fkey==1) document.getElementById('locked').innerHTML = "FIREWALL ON: Only your ip address "+ip+" can access webgui.";
+        else document.getElementById('locked').innerHTML = "";
+    }
+    function keyUp(e){
+        var key = e.keyCode;
+        if (key==67 || key==73 || key==70 || key==69 || (key>=48 && key<=57) || key==87 || key==80 || key==82) return;
+        optionkey = 0;
+        commandkey = 0;
+    }
+    function mouseDown2(e){
+        if (animate>0 && animate!=5 && animate<7) {
+            var k = parseInt(e.target.id[6])+3;
+            var button = e.button;
+            if (optionkey==1) button=1;
+            if (commandkey==1) button=2;
+            var rect = e.target.getBoundingClientRect();
+            var x = (e.clientX - rect.left)/rect.height;
+            var y = 1-(e.clientY - rect.top)/rect.height;
+            var temp = button+", x = "+x.toFixed(6)+", y = "+y.toFixed(6);
+            AJAX('writeline.php',"cmd='mse button="+button+",x="+x.toFixed(6)+",y="+y.toFixed(6)+",pane="+k+"'",1,1,0,1);
+            document.getElementById('lastmse').innerHTML = "(last pressed mouse: button = "+temp+", pane = "+k+")";
+            var extra = ''; if (sg==1) extra = '?x='+pane;
+            if (animate!=2 && animate!=3) setTimeout("AJAX('readline.php"+extra+"','',1,1,0,0)",20);
+        }
+        e.preventDefault();
+        return false;
+    }
+    function mouseDown(e){
+        var k = parseInt(e.target.id[9]);
+        if (isNaN(k) || k<0 || k>2) return false;
+        focus = k;
+        if (ikey==1) updateInfo();
+        btnfix = e.button;
+        drag[k] = 1;
+        old_x[k] = e.pageX;
+        old_y[k] = e.pageY;
+        old2_x[k] = e.pageX;
+        old2_y[k] = e.pageY;
+        rmatrix_old[k] = rmatrix[k];
+        var rect = e.target.getBoundingClientRect();
+        var xpix = e.clientX - rect.left - x_trans[k]*zoom[k];
+        var ypix = e.clientY - rect.top - y_trans[k]*zoom[k];
+        var x = 2*(1.5*xpix/canvas[k].width - 0.5)/zoom[k];
+        var y = 2*(1 - ypix/canvas[k].height - 0.5)/zoom[k];
+        old3_x[k] = x;
+        old3_y[k] = y;
+        if ((vertices[k][0]==0 && vertices[k][1]==0) && animate>0 && animate!=5 && animate<7)
+            sendmouse(e,k);
+        e.preventDefault();
+        return false;
+    }
+    function mouseUp(e){
+        var k = parseInt(e.target.id[9]);
+        if (isNaN(k) || k<0 || k>2) return false;
+        drag[k] = -1;
+        if (e.pageX==old2_x[k] && e.pageY==old2_y[k]){
+            old_dx[k] = 0;
+            old_dy[k] = 0;
+        }
+        if (Math.abs(e.pageX-old2_x[k])+Math.abs(e.pageY-old2_y[k])<10)
+            if ((vertices[k][0]!=0 || vertices[k][1]!=0) && animate>0 && animate!=5 && animate<7)
+                sendmouse(e,k);
+        e.preventDefault();
+        return false;
+    }
+    function sendmouse(e,k){
+        var det = rmatrix[k][0]*rmatrix[k][4]-rmatrix[k][1]*rmatrix[k][3];
+        if (det==0) return;
+        var rect = e.target.getBoundingClientRect();
+        var xpix = e.clientX - rect.left;
+        var ypix = e.clientY - rect.top;
+        var xx = 2*(1.5*xpix/canvas[k].width - 0.5);
+        var yy = 2*(1 - ypix/canvas[k].height - 0.5);
+        var xt = 2 * 1.5 * x_trans[k]/canvas[k].width;
+        var yt = 2 * -y_trans[k]/canvas[k].height;
+        xx=(xx-zoom[k]*xt)/zoom[k];
+        yy=(yy-zoom[k]*yt)/zoom[k];
+        var m = [rmatrix[k][4]/det, -rmatrix[k][3]/det, -rmatrix[k][1]/det, rmatrix[k][0]/det];
+        var x=xx*m[0]+yy*m[1];
+        var y=xx*m[2]+yy*m[3];
+        var button = e.button;
+        if (optionkey==1) button=1;
+        if (commandkey==1) button=2;
+        var temp = button+", x = "+x.toFixed(6)+", y = "+y.toFixed(6);
+        AJAX('writeline.php',"cmd='mse button="+button+",x="+x.toFixed(6)+",y="+y.toFixed(6)+",pane="+k+"'",1,1,0,1);
+        document.getElementById('lastmse').innerHTML = "(last pressed mouse: button = "+temp+", pane = "+k+")";
+        var extra = ''; if (sg==1) extra = '?x='+pane;
+        if (animate!=2 && animate!=3) setTimeout("AJAX('readline.php"+extra+"','',1,1,0,0)",20);
+    }
+    function spin(k){
+        var timestamp = Date.now();
+        var inc = 0.001;
+        if (stopspin[k]==1 || getobjectcount(k)==0) {
+            oldtimestamp[k] = 0;
+            drawing[k] = 0;
+            document.getElementById('spin'+k).innerHTML="Spin";
+            return;
+        }
+        if (oldtimestamp[k]!=0 && drag[k]!=1) {
+            inc = (timestamp - oldtimestamp[k])/10000;
+            var d = inc * Math.sqrt(old_dx[k]*old_dx[k]+old_dy[k]*old_dy[k]);
+            var qmatrix = matrix_quaternion4(d,old_u[k],old_d[k]);
+            rmatrix[k] = matrix_matrix_mult(rmatrix[k],qmatrix);
+            if (ikey==1) updateInfo();
+            if (drawing[k]!=1 && (old_dx[k]!=0 || old_dy[k]!=0)) {
+                window.requestAnimationFrame( function() {draw(k);} );
+                drawing[k] = 1;
+                oldtimestamp[k] = Date.now();
+            }
+        }
+        else {
+            if (oldtimestamp[k]==0) document.getElementById('spin'+k).innerHTML="Stop";
+            oldtimestamp[k] = Date.now();
+        }
+        setTimeout(function(){spin(k);},20);
+    }
+    function mouseMove(e){
+        var k = parseInt(e.target.id[9]);
+        if (isNaN(k) || k<0 || k>2 || (vertices[k][0]==0 && vertices[k][1]==0)) return false;
+        var dx = e.pageX - old_x[k];
+        var dy = e.pageY - old_y[k];
+        if (drag[k] == -1 && isMobile==0) return false;
+        var btn = e.button;
+        if (isChrome) btn = btnfix;
+        if (btn==1 || optionkey==1){
+            x_trans[k] = x_trans[k] + dx/zoom[k];
+            y_trans[k] = y_trans[k] + dy/zoom[k];
+        }
+        else if (btn==2 || commandkey==1)
+            zoom[k] = zoom[k] * (1.0 + (dx - dy)/canvas[k].height);
+        else if (btn==0){
+            old_dx[k] = 3.0*dx/zoom[k];
+            old_dy[k] = -3.0*dy/zoom[k];
+            var rect = e.target.getBoundingClientRect();
+            var xpix = e.clientX - rect.left - x_trans[k]*zoom[k];
+            var ypix = e.clientY - rect.top - y_trans[k]*zoom[k];
+            var x = 2*(1.5*xpix/canvas[k].width - 0.5)/zoom[k];
+            var y = 2*(1 - ypix/canvas[k].height - 0.5)/zoom[k];
+            var dx2 = e.pageX - old2_x[k];
+            var dy2 = e.pageY - old2_y[k];
+            var d = Math.sqrt(dx2*dx2+dy2*dy2);
+            var qmatrix = matrix_quaternion3(3.0*d/canvas[k].height/zoom[k],old3_x[k],old3_y[k],x,y,k);
+            rmatrix[k] = matrix_matrix_mult(rmatrix_old[k],qmatrix);
+        }
+        old_x[k] = e.pageX;
+        old_y[k] = e.pageY;
+        if (vertices[k][0].length + vertices[k][1].length !=0) {
+            if (ikey==1) updateInfo();
+            if (drawing[k]!=1) {
+                window.requestAnimationFrame( function() {draw(k);} );
+                drawing[k] = 1;
+            }
+        }
+        e.preventDefault();
+        return false;
+    }
+    function checkMobile(){
+        if( navigator.userAgent.match(/Android/i)
+         || navigator.userAgent.match(/webOS/i)
+         || navigator.userAgent.match(/iPhone/i)
+         || navigator.userAgent.match(/iPad/i)
+         || navigator.userAgent.match(/iPod/i)
+         || navigator.userAgent.match(/BlackBerry/i)
+         || navigator.userAgent.match(/Windows Phone/i)) isMobile=1;
+    }
+    function contextMenu(e){
+        if (e.button === 2) {
+            e.preventDefault();
+            return false;
+        }
+    }

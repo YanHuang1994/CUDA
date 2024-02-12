@@ -1,0 +1,43 @@
+\cleardoublepage
+\setcounter{chapter}{0} %The counter for chapters should be set one less than 
+                        %the actual chapter number, for example, {1} for 
+                        %chapter 2, and {2} for chapter 3.
+\setcounter{section}{1} %The counter for sections should be set to match the
+                        %actual chapter number, for example, {2} for sections 
+                        %in chapter, and {3} for sections in chapter 3. 
+
+\chapter{Introduction}
+\label{intro}
+\markboth{WEBGUI USERS' GUIDE}{INTRODUCTION} %For running heads. The first 
+         %field will be the same for every chapter. The second will contain the 
+         %appropriate chapter title.
+\pagenumbering{arabic}
+\setcounter{page}{1} 
+
+\section{Description}
+
+\f{WEBGUI} is a C language library that creates for your software a graphical user interface (GUI) after
+only a few library function calls. \f{WEBGUI} is platform independent because it displays everything
+in any standard web browser. And \f{WEBGUI} allows the interface to reside on either the local machine
+or a remote machine.
+ 
+
+\section{Overview}
+
+\f{WEBGUI} works by enabling your program to mimic a web server. When your program calls the library
+routine "webstart(int x)", a new thread is created which sets up a web server and begins listening on port x.  
+Both your program and the web server run on the same host machine. Using any standard web browser either 
+locally or remotely, enter the URL of the host machine. Then, the web browser will display a set of controls. 
+The web browser is in constant communication with
+your software running on the host machine. All of your software's output will be displayed in the web
+browser and all input you provide in the web browser will be sent to your software.
+
+\section{Installation}
+
+Simply compile and link \f{WEBGUI} to your program. No other files are needed. For example, 
+"gcc YourProgram.c webgui.c". To start the service, call the routine "webstart(int port)" within your program. 
+Next, to send text output to the web browser, call the routine "writeline(char* str)" where str is a string of length 80. 
+To receive input, call the routine "readline(char* str)" where str is a buffer that can receive a string of length 80.
+Lastly, to display 2D images, or 3D objects, call either "webimagedisplay" or "webgldisplay".
+If you would like your web browser controls to have buttons, call the routine "webinit". To learn more
+about these and other routines, read Chapter \ref{chap:2} titled, "WebGUI API" below.
