@@ -14,4 +14,9 @@ make
 
 cd ./project1/part1_bonus
 
+make clean
+
+make
+
+./part1_bonus_program
 
