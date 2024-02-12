@@ -1,4 +1,4 @@
-cd ./MNIST-CNN-99.5
+cd ./project1/MNIST-CNN-99.5
 
 unzip train.zip
 
