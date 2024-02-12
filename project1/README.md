@@ -18,5 +18,5 @@ make clean
 
 make
 
-./part1_bonus_program
+./01_mnist_bonus_program
 
