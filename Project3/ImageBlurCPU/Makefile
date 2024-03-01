@@ -1,16 +1,16 @@
-CC = g++
-CFLAGS = -std=c++11 -Wall -g 
+CC = gcc
+CFLAGS = -Wall -g -O3 -std=c99
 
-SRCS = ImageBlurCPU.cpp
-OBJS = $(SRCS:.cpp=.o)
-EXEC = ImageBlurCPU
+SRCS = ImageBlurCPU.c
+OBJS = $(SRCS:.c=.o)
+EXEC = ImageBlurCPU.out
 
 all: $(EXEC)
 
 $(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(EXEC)
+	$(CC) $(CFLAGS) $(OBJS) -lm -lpthread -o $(EXEC)
 
-%.o: %.cpp
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
