@@ -1,15 +1,9 @@
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "ImageBlurCPU.h"
 #include <iostream>
-#include <vector>
-#include <tuple>
 
 // Define blur size (adjust as needed)
 #define BLUR_SIZE 10
 
-// Function to read an image from file using stb_image.h
 std::vector<std::tuple<int, int, int>> readImage(const std::string& filename, int& width, int& height) {
     int channels;
     unsigned char* imageData = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb);
@@ -28,8 +22,7 @@ std::vector<std::tuple<int, int, int>> readImage(const std::string& filename, in
     return image;
 }
 
-// Function to apply windowed average blur
-void applyBlur(const std::vector<std::tuple<int, int, int>>& inputImage, std::vector<std::tuple<int, int, int>>& outImage, int width, int height) {
+void winAvgImageBlur(const std::vector<std::tuple<int, int, int>>& inputImage, std::vector<std::tuple<int, int, int>>& outImage, int width, int height) {
     // Iterate over each pixel in the input image
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
@@ -71,7 +64,7 @@ int main() {
     std::vector<std::tuple<int, int, int>> outImage(width * height);
 
     // Apply windowed average blur
-    applyBlur(inputImage, outImage, width, height);
+    winAvgImageBlur(inputImage, outImage, width, height);
 
     // Save the blurred image as a JPEG file
     std::vector<unsigned char> imageData(width * height * 3); // Each pixel has 3 channels (RGB)

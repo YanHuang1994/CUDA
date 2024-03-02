@@ -1,9 +1,9 @@
 CC = g++
 CFLAGS = -std=c++11 -Wall -g
 
-SRCS = blurwindow.cpp
+SRCS = ImageBlurCPU.cpp
 OBJS = $(SRCS:.cpp=.o)
-EXEC = blurwindow
+EXEC = ImageBlurCPU
 
 all: $(EXEC)
 
