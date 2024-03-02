@@ -13,7 +13,7 @@ bool isWindows() {
 }
 
 // Define blur size (adjust as needed)
-#define BLUR_SIZE 10
+#define BLUR_SIZE 3
 
 const int FILE_HEADER_SIZE = 16; //size of MNIST image files
 
@@ -120,41 +120,19 @@ void saveImageAsPNG(const std::vector<unsigned char>& image, const std::string& 
 }
 
 void applyWindowedAverageBlur(const std::vector<unsigned char>& inputImage, std::vector<unsigned char>& outputImage, int width, int height, int windowSize) {
-    // Ensure the outputImage is the correct size
     outputImage.resize(width * height);
 
-    // Calculate the window radius from the window size (assumes square window)
-    int windowRadius = windowSize / 2;
+    std::vector<std::tuple<int, int, int>> inputImageTuples;
+    for (int i = 0; i < width * height; ++i) {
+        inputImageTuples.push_back(std::make_tuple(inputImage[i], inputImage[i], inputImage[i]));
+    }
 
-    // Iterate over each pixel in the image
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-            // Initialize variables to sum pixel values and count number of pixels
-            long pixelSum = 0;
-            int count = 0;
+    std::vector<std::tuple<int, int, int>> outputImageTuples(width * height);
 
-            // Iterate over each pixel in the window surrounding the current pixel
-            for (int wy = -windowRadius; wy <= windowRadius; ++wy) {
-                for (int wx = -windowRadius; wx <= windowRadius; ++wx) {
-                    // Calculate the position of the window pixel
-                    int windowRow = row + wy;
-                    int windowCol = col + wx;
+    winAvgImageBlur(inputImageTuples, outputImageTuples, width, height);
 
-                    // Check if the window pixel is within the bounds of the image
-                    if (windowRow >= 0 && windowRow < height && windowCol >= 0 && windowCol < width) {
-                        // Sum the pixel value and increment the pixel count
-                        pixelSum += inputImage[windowRow * width + windowCol];
-                        count++;
-                    }
-                }
-            }
-
-            // Calculate the average pixel value for the window
-            unsigned char avgPixel = static_cast<unsigned char>(pixelSum / count);
-
-            // Set the average pixel value in the output image
-            outputImage[row * width + col] = avgPixel;
-        }
+    for (int i = 0; i < width * height; ++i) {
+        outputImage[i] = std::get<0>(outputImageTuples[i]);
     }
 }
 
