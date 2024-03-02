@@ -1,8 +1,33 @@
-#include "ImageBlurCPU.h"
+#include <fstream>
 #include <iostream>
+#include <vector>
+#include <cstdlib>
+#include "ImageBlurCPU.h"
+
+bool isWindows() {
+    #ifdef _WIN32
+    return true;
+    #else
+    return false;
+    #endif
+}
 
 // Define blur size (adjust as needed)
 #define BLUR_SIZE 10
+
+const int FILE_HEADER_SIZE = 16; //size of MNIST image files
+
+const int IMAGE_WIDTH = 28; //MNIST image width
+const int IMAGE_HEIGHT = 28; //MNIST image height
+
+int reverseInt(int i) {
+    unsigned char ch1, ch2, ch3, ch4;
+    ch1 = i & 255;
+    ch2 = (i >> 8) & 255;
+    ch3 = (i >> 16) & 255;
+    ch4 = (i >> 24) & 255;
+    return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
+}
 
 std::vector<std::tuple<int, int, int>> readImage(const std::string& filename, int& width, int& height) {
     int channels;
@@ -54,33 +79,140 @@ void winAvgImageBlur(const std::vector<std::tuple<int, int, int>>& inputImage, s
     }
 }
 
-int main() {
-    // Read the input image
-    std::string filename = "original_image.png";
-    int width, height;
-    std::vector<std::tuple<int, int, int>> inputImage = readImage(filename, width, height);
-
-    // Output image vector to store blurred image
-    std::vector<std::tuple<int, int, int>> outImage(width * height);
-
-    // Apply windowed average blur
-    winAvgImageBlur(inputImage, outImage, width, height);
-
-    // Save the blurred image as a JPEG file
-    std::vector<unsigned char> imageData(width * height * 3); // Each pixel has 3 channels (RGB)
-    for (int i = 0; i < width * height; ++i) {
-		int r = std::get<0>(outImage[i]);
-		int g = std::get<1>(outImage[i]);
-		int b = std::get<2>(outImage[i]);
-        int index = i * 3;
-        imageData[index] = static_cast<unsigned char>(r);
-        imageData[index + 1] = static_cast<unsigned char>(g);
-        imageData[index + 2] = static_cast<unsigned char>(b);
+std::vector<std::vector<unsigned char>> readMnistImages(const std::string& filename, int& numberOfImages) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+        exit(EXIT_FAILURE);
     }
 
-    stbi_write_jpg("blurred_image0.jpg", width, height, 3, imageData.data(), 100);
+    int magicNumber = 0;
+    int nRows = 0, nCols = 0;
+    file.read(reinterpret_cast<char*>(&magicNumber), sizeof(magicNumber));
+    magicNumber = reverseInt(magicNumber);
 
-    std::cout << "Blurred image saved as blurred_image.jpg" << std::endl;
+    if (magicNumber != 2051) {
+        std::cerr << "Error: Invalid MNIST image file!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    file.read(reinterpret_cast<char*>(&numberOfImages), sizeof(numberOfImages));
+    numberOfImages = reverseInt(numberOfImages);
+    file.read(reinterpret_cast<char*>(&nRows), sizeof(nRows));
+    nRows = reverseInt(nRows);
+    file.read(reinterpret_cast<char*>(&nCols), sizeof(nCols));
+    nCols = reverseInt(nCols);
+
+    std::vector<std::vector<unsigned char>> images(numberOfImages, std::vector<unsigned char>(nRows * nCols));
+    for (int i = 0; i < numberOfImages; ++i) {
+        for (int j = 0; j < nRows * nCols; ++j) {
+            unsigned char pixel = 0;
+            file.read(reinterpret_cast<char*>(&pixel), sizeof(pixel));
+            images[i][j] = pixel;
+        }
+    }
+
+    return images;
+}
+
+void saveImageAsPNG(const std::vector<unsigned char>& image, const std::string& filename, int width, int height) {
+    stbi_write_png(filename.c_str(), width, height, 1, image.data(), width);
+}
+
+void applyWindowedAverageBlur(const std::vector<unsigned char>& inputImage, std::vector<unsigned char>& outputImage, int width, int height, int windowSize) {
+    // Ensure the outputImage is the correct size
+    outputImage.resize(width * height);
+
+    // Calculate the window radius from the window size (assumes square window)
+    int windowRadius = windowSize / 2;
+
+    // Iterate over each pixel in the image
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            // Initialize variables to sum pixel values and count number of pixels
+            long pixelSum = 0;
+            int count = 0;
+
+            // Iterate over each pixel in the window surrounding the current pixel
+            for (int wy = -windowRadius; wy <= windowRadius; ++wy) {
+                for (int wx = -windowRadius; wx <= windowRadius; ++wx) {
+                    // Calculate the position of the window pixel
+                    int windowRow = row + wy;
+                    int windowCol = col + wx;
+
+                    // Check if the window pixel is within the bounds of the image
+                    if (windowRow >= 0 && windowRow < height && windowCol >= 0 && windowCol < width) {
+                        // Sum the pixel value and increment the pixel count
+                        pixelSum += inputImage[windowRow * width + windowCol];
+                        count++;
+                    }
+                }
+            }
+
+            // Calculate the average pixel value for the window
+            unsigned char avgPixel = static_cast<unsigned char>(pixelSum / count);
+
+            // Set the average pixel value in the output image
+            outputImage[row * width + col] = avgPixel;
+        }
+    }
+}
+
+void createDirectoryIfNotExists(const std::string& directoryPath) {
+    if (!std::ifstream(directoryPath)) {
+        std::string command = "mkdir -p " + directoryPath;
+        system(command.c_str());
+    }
+}
+
+void removeDirectoryRecursively(const std::string& dirPath) {
+    std::string command;
+    if (isWindows()) {
+        command = "rd /s /q \"" + dirPath + "\"";
+    } else {
+        command = "rm -r \"" + dirPath + "\"";
+    }
+    system(command.c_str());
+}
+
+int main()
+{
+    removeDirectoryRecursively("../input");
+    removeDirectoryRecursively("../output");
+
+    std::string inputDir = "../input";
+    std::string outputDir = "../output";
+
+    // Create input and output directories if they don't exist
+    createDirectoryIfNotExists(inputDir);
+    createDirectoryIfNotExists(outputDir);
+
+    std::string inputFilename = "../data/train-images.idx3-ubyte";
+    int numberOfImages = 0;
+    auto images = readMnistImages(inputFilename, numberOfImages);
+
+    // The path to the directory where the output images will be saved
+    std::string outputDirectory = "../output";
+
+    int windowSize = 3; // Blur windows size
+    for (int i = 0; i < numberOfImages; ++i) {
+        if (i % 100 == 0) { // Check if the index is a multiple of 100
+            std::vector<unsigned char> blurredImage(28 * 28);
+            applyWindowedAverageBlur(images[i], blurredImage, 28, 28, windowSize);
+
+            // Save the original image
+            std::string originalFilename = inputDir + "/original_image_" + std::to_string(i) + ".png";
+            saveImageAsPNG(images[i], originalFilename, 28, 28);
+
+            // Save the blurred image
+            std::string blurredFilename = outputDir + "/blurred_image_" + std::to_string(i) + ".png";
+            saveImageAsPNG(blurredImage, blurredFilename, 28, 28);
+
+            std::cout << "Saved image " << i << std::endl;
+        }
+    }
+
+    std::cout << "Processed " << numberOfImages << " images." << std::endl;
 
     return 0;
 }
