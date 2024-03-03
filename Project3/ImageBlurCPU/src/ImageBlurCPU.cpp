@@ -2,7 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
-#include "ImageBlurCPU.h"
+#include "../include/ImageBlurCPU.h"
+
 
 bool isWindows() {
     #ifdef _WIN32
@@ -13,7 +14,7 @@ bool isWindows() {
 }
 
 // Define blur size (adjust as needed)
-#define BLUR_SIZE 3
+//#define BLUR_SIZE 10
 
 const int FILE_HEADER_SIZE = 16; //size of MNIST image files
 
@@ -47,7 +48,7 @@ std::vector<std::tuple<int, int, int>> readImage(const std::string& filename, in
     return image;
 }
 
-void winAvgImageBlur(const std::vector<std::tuple<int, int, int>>& inputImage, std::vector<std::tuple<int, int, int>>& outImage, int width, int height) {
+void winAvgImageBlur(const std::vector<std::tuple<int, int, int>>& inputImage, std::vector<std::tuple<int, int, int>>& outImage, int width, int height, int windowSize) {
     // Iterate over each pixel in the input image
     for (int row = 0; row < height; ++row) {
         for (int col = 0; col < width; ++col) {
@@ -55,8 +56,8 @@ void winAvgImageBlur(const std::vector<std::tuple<int, int, int>>& inputImage, s
             int pixels = 0;
 
             // Iterate over each pixel in the blur window
-            for (int blurRow = -BLUR_SIZE; blurRow <= BLUR_SIZE; ++blurRow) {
-                for (int blurCol = -BLUR_SIZE; blurCol <= BLUR_SIZE; ++blurCol) {
+            for (int blurRow = -windowSize; blurRow <= windowSize; ++blurRow) {
+                for (int blurCol = -windowSize; blurCol <= windowSize; ++blurCol) {
                     int curRow = row + blurRow;
                     int curCol = col + blurCol;
 
@@ -129,7 +130,7 @@ void applyWindowedAverageBlur(const std::vector<unsigned char>& inputImage, std:
 
     std::vector<std::tuple<int, int, int>> outputImageTuples(width * height);
 
-    winAvgImageBlur(inputImageTuples, outputImageTuples, width, height);
+    winAvgImageBlur(inputImageTuples, outputImageTuples, width, height, windowSize);
 
     for (int i = 0; i < width * height; ++i) {
         outputImage[i] = std::get<0>(outputImageTuples[i]);
@@ -169,15 +170,18 @@ int main()
     int numberOfImages = 0;
     auto images = readMnistImages(inputFilename, numberOfImages);
 
+    double totalTime = 0.0;
+
     // The path to the directory where the output images will be saved
     std::string outputDirectory = "../output";
 
-    int windowSize = 3; // Blur windows size
+    int windowSize = 10; // Blur windows size
     for (int i = 0; i < numberOfImages; ++i) {
-        if (i % 100 == 0) { // Check if the index is a multiple of 100
-            std::vector<unsigned char> blurredImage(28 * 28);
-            applyWindowedAverageBlur(images[i], blurredImage, 28, 28, windowSize);
+        StartTimer();
+        std::vector<unsigned char> blurredImage(28 * 28);
+        applyWindowedAverageBlur(images[i], blurredImage, 28, 28, windowSize);
 
+        if (i % 100 == 0) { // Check if the index is a multiple of 100
             // Save the original image
             std::string originalFilename = inputDir + "/original_image_" + std::to_string(i) + ".png";
             saveImageAsPNG(images[i], originalFilename, 28, 28);
@@ -188,9 +192,16 @@ int main()
 
             std::cout << "Saved image " << i << std::endl;
         }
+        const double tElapsed = GetTimer() / 1000.0;
+        totalTime += tElapsed;
     }
 
     std::cout << "Processed " << numberOfImages << " images." << std::endl;
+
+    double avgTime = totalTime / (double)(numberOfImages);
+
+    printf("%0.3f totalTime / second\n", totalTime);
+    printf("%0.3f avgTime / second\n", avgTime);
 
     return 0;
 }

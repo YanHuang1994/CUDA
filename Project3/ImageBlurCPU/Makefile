@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -std=c++11 -Wall -g
 
-SRCS = ImageBlurCPU.cpp
+SRCS = ./src/ImageBlurCPU.cpp
 OBJS = $(SRCS:.cpp=.o)
 EXEC = ImageBlurCPU
 
