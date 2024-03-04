@@ -2,27 +2,15 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include <cmath>
 #include "../include/ImageBlurCPU.h"
 
-bool isWindows()
-{
-#ifdef _WIN32
-    return true;
-#else
-    return false;
-#endif
-}
-
-// Define blur size (adjust as needed)
-// #define BLUR_SIZE 10
-
+// Constants for MNIST images
 const int FILE_HEADER_SIZE = 16; // size of MNIST image files
+const int MNIST_IMAGE_WIDTH = 28;  // MNIST image width
+const int MNIST_IMAGE_HEIGHT = 28; // MNIST image height
 
-const int IMAGE_WIDTH = 28;  // MNIST image width
-const int IMAGE_HEIGHT = 28; // MNIST image height
-
-int reverseInt(int i)
-{
+int reverseInt(int i) {
     unsigned char ch1, ch2, ch3, ch4;
     ch1 = i & 255;
     ch2 = (i >> 8) & 255;
@@ -31,19 +19,24 @@ int reverseInt(int i)
     return ((int)ch1 << 24) + ((int)ch2 << 16) + ((int)ch3 << 8) + ch4;
 }
 
-std::vector<std::tuple<int, int, int>> readImage(const std::string &filename, int &width, int &height)
-{
+bool isWindows() {
+#ifdef _WIN32
+    return true;
+#else
+    return false;
+#endif
+}
+
+std::vector<std::tuple<int, int, int>> readImage(const std::string &filename, int &width, int &height) {
     int channels;
     unsigned char *imageData = stbi_load(filename.c_str(), &width, &height, &channels, STBI_rgb);
-    if (!imageData)
-    {
+    if (!imageData) {
         std::cerr << "Error: Unable to read image file " << filename << std::endl;
         exit(EXIT_FAILURE);
     }
 
     std::vector<std::tuple<int, int, int>> image(width * height);
-    for (int i = 0; i < width * height; ++i)
-    {
+    for (int i = 0; i < width * height; ++i) {
         int index = i * 3; // Each pixel has 3 channels (RGB)
         image[i] = std::make_tuple(imageData[index], imageData[index + 1], imageData[index + 2]);
     }
@@ -52,27 +45,57 @@ std::vector<std::tuple<int, int, int>> readImage(const std::string &filename, in
     return image;
 }
 
-void winAvgImageBlur(const std::vector<std::tuple<int, int, int>> &inputImage, std::vector<std::tuple<int, int, int>> &outImage, int width, int height, int windowSize)
-{
+std::vector<std::vector<unsigned char>> readMnistImages(const std::string &filename, int &numberOfImages) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    int magicNumber = 0;
+    int nRows = 0, nCols = 0;
+    file.read(reinterpret_cast<char *>(&magicNumber), sizeof(magicNumber));
+    magicNumber = reverseInt(magicNumber);
+
+    if (magicNumber != 2051) {
+        std::cerr << "Error: Invalid MNIST image file!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    file.read(reinterpret_cast<char *>(&numberOfImages), sizeof(numberOfImages));
+    numberOfImages = reverseInt(numberOfImages);
+    file.read(reinterpret_cast<char *>(&nRows), sizeof(nRows));
+    nRows = reverseInt(nRows);
+    file.read(reinterpret_cast<char *>(&nCols), sizeof(nCols));
+    nCols = reverseInt(nCols);
+
+    std::vector<std::vector<unsigned char>> images(numberOfImages, std::vector<unsigned char>(nRows * nCols));
+    for (int i = 0; i < numberOfImages; ++i) {
+        for (int j = 0; j < nRows * nCols; ++j) {
+            unsigned char pixel = 0;
+            file.read(reinterpret_cast<char *>(&pixel), sizeof(pixel));
+            images[i][j] = pixel;
+        }
+    }
+
+    return images;
+}
+
+void winAvgImageBlur(const std::vector<std::tuple<int, int, int>> &inputImage, std::vector<std::tuple<int, int, int>> &outImage, int width, int height, int windowSize) {
     // Iterate over each pixel in the input image
-    for (int row = 0; row < height; ++row)
-    {
-        for (int col = 0; col < width; ++col)
-        {
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
             int r = 0, g = 0, b = 0;
             int pixels = 0;
 
             // Iterate over each pixel in the blur window
-            for (int blurRow = -windowSize; blurRow <= windowSize; ++blurRow)
-            {
-                for (int blurCol = -windowSize; blurCol <= windowSize; ++blurCol)
-                {
+            for (int blurRow = -windowSize; blurRow <= windowSize; ++blurRow) {
+                for (int blurCol = -windowSize; blurCol <= windowSize; ++blurCol) {
                     int curRow = row + blurRow;
                     int curCol = col + blurCol;
 
                     // Take care of the image edge and ensure valid image pixel
-                    if (curRow > -1 && curRow < height && curCol > -1 && curCol < width)
-                    {
+                    if (curRow > -1 && curRow < height && curCol > -1 && curCol < width) {
                         int curR = std::get<0>(inputImage[curRow * width + curCol]);
                         int curG = std::get<1>(inputImage[curRow * width + curCol]);
                         int curB = std::get<2>(inputImage[curRow * width + curCol]);
@@ -90,59 +113,11 @@ void winAvgImageBlur(const std::vector<std::tuple<int, int, int>> &inputImage, s
     }
 }
 
-std::vector<std::vector<unsigned char>> readMnistImages(const std::string &filename, int &numberOfImages)
-{
-    std::ifstream file(filename, std::ios::binary);
-    if (!file.is_open())
-    {
-        std::cerr << "Error: Unable to open file " << filename << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    int magicNumber = 0;
-    int nRows = 0, nCols = 0;
-    file.read(reinterpret_cast<char *>(&magicNumber), sizeof(magicNumber));
-    magicNumber = reverseInt(magicNumber);
-
-    if (magicNumber != 2051)
-    {
-        std::cerr << "Error: Invalid MNIST image file!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    file.read(reinterpret_cast<char *>(&numberOfImages), sizeof(numberOfImages));
-    numberOfImages = reverseInt(numberOfImages);
-    file.read(reinterpret_cast<char *>(&nRows), sizeof(nRows));
-    nRows = reverseInt(nRows);
-    file.read(reinterpret_cast<char *>(&nCols), sizeof(nCols));
-    nCols = reverseInt(nCols);
-
-    std::vector<std::vector<unsigned char>> images(numberOfImages, std::vector<unsigned char>(nRows * nCols));
-    for (int i = 0; i < numberOfImages; ++i)
-    {
-        for (int j = 0; j < nRows * nCols; ++j)
-        {
-            unsigned char pixel = 0;
-            file.read(reinterpret_cast<char *>(&pixel), sizeof(pixel));
-            images[i][j] = pixel;
-        }
-    }
-
-    return images;
-}
-
-void saveImageAsPNG(const std::vector<unsigned char> &image, const std::string &filename, int width, int height)
-{
-    stbi_write_png(filename.c_str(), width, height, 1, image.data(), width);
-}
-
-void applyWindowedAverageBlur(const std::vector<unsigned char> &inputImage, std::vector<unsigned char> &outputImage, int width, int height, int windowSize)
-{
+void applyWindowedAverageBlur(const std::vector<unsigned char> &inputImage, std::vector<unsigned char> &outputImage, int width, int height, int windowSize) {
     outputImage.resize(width * height);
 
     std::vector<std::tuple<int, int, int>> inputImageTuples;
-    for (int i = 0; i < width * height; ++i)
-    {
+    for (int i = 0; i < width * height; ++i) {
         inputImageTuples.push_back(std::make_tuple(inputImage[i], inputImage[i], inputImage[i]));
     }
 
@@ -150,33 +125,118 @@ void applyWindowedAverageBlur(const std::vector<unsigned char> &inputImage, std:
 
     winAvgImageBlur(inputImageTuples, outputImageTuples, width, height, windowSize);
 
-    for (int i = 0; i < width * height; ++i)
-    {
+    for (int i = 0; i < width * height; ++i) {
         outputImage[i] = std::get<0>(outputImageTuples[i]);
     }
 }
 
-void createDirectoryIfNotExists(const std::string &directoryPath)
-{
-    if (!std::ifstream(directoryPath))
-    {
+void generateGaussian(std::vector<double> &K, int dim, int radius) {
+    double stdev = 1;
+    double pi = 22.0 / 7.0;
+    double constant = 1.0 / (2.0 * pi * pow(stdev, 2));
+    double value;
+    double sum = 0.0;
+
+    for (int i = -radius; i < radius + 1; ++i) {
+        for (int j = -radius; j < radius + 1; ++j) {
+            int idx = (i + radius) * dim + (j + radius);
+            value = constant * (1 / exp((pow(i, 2) + pow(j, 2)) / (2 * pow(stdev, 2))));
+            K[idx] = value; // (i + radius) * dim + (j + radius)
+            sum += value;
+        }
+    }
+    // Normalize the kernel
+    for (int i = 0; i < dim * dim; ++i) {
+        K[i] /= sum;
+    }
+}
+
+void gaussianKernelImageBlur(const std::vector<std::tuple<int, int, int>> &inputImage, std::vector<std::tuple<int, int, int>> &outImage, std::vector<double> K, int width, int height, int kdim) {
+    // Iterate over each pixel in the input image
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
+            int r = 0, g = 0, b = 0;
+            int pixels = 0; // n pixels is basicallu kdim*kdim
+
+            // Iterate over each pixel in the blur window
+            for (int blurRow = -kdim; blurRow <= kdim; ++blurRow) {
+                for (int blurCol = -kdim; blurCol <= kdim; ++blurCol) {
+                    int curRow = row + blurRow;
+                    int curCol = col + blurCol;
+
+                    // Take care of the image edge and ensure valid image pixel
+                    if (curRow > -1 && curRow < height && curCol > -1 && curCol < width) {
+                        // Multiply each pixel by corresponding kernel weight
+                        //auto [curR, curG, curB] = inputImage[curRow * width + curCol];
+                        auto curPixel = inputImage[curRow * width + curCol];
+                        int curR = std::get<0>(curPixel);
+                        int curG = std::get<1>(curPixel);
+                        int curB = std::get<2>(curPixel);
+
+
+                        r += curR * K[(blurRow * kdim) + blurCol];
+                        g += curG * K[(blurRow * kdim) + blurCol];
+                        b += curB * K[(blurRow * kdim) + blurCol];
+                        pixels++; // Number of pixels added
+                    }
+                }
+            }
+            // Write the new pixel value in outImage
+            outImage[row * width + col] = std::make_tuple(r, g, b );
+        }
+    }
+}
+
+void applyGaussianKernelImageBlur(const std::vector<unsigned char>& inputImage, std::vector<unsigned char>& outputImage, int width, int height, int windowSize) {
+    std::vector<double> kernel;
+    int kRadius = (windowSize - 1) / 2;
+    kernel.resize(windowSize*windowSize, 0);
+    generateGaussian(kernel, windowSize, kRadius); // Fill the Gaussian kernel
+
+    std::vector<std::tuple<int, int, int>> inputImageTuples(width * height);
+    std::vector<std::tuple<int, int, int>> outputImageTuples(width * height);
+
+    // Convert input image to RGB tuples format
+    for (int i = 0; i < width * height; ++i) {
+        inputImageTuples[i] = std::make_tuple(inputImage[i], inputImage[i], inputImage[i]);
+    }
+
+    // Apply Gaussian blur
+    gaussianKernelImageBlur(inputImageTuples, outputImageTuples, kernel, width, height, windowSize);
+
+    // Prepare the output image
+    outputImage.resize(width * height);
+    for (int i = 0; i < width * height; ++i) {
+        // Since the image is grayscale, we can take any channel's value as the output
+        outputImage[i] = std::get<0>(outputImageTuples[i]);
+    }
+}
+
+void saveImageAsPNG(const std::vector<unsigned char> &image, const std::string &filename, int width, int height) {
+    stbi_write_png(filename.c_str(), width, height, 1, image.data(), width);
+}
+
+void createDirectoryIfNotExists(const std::string &directoryPath) {
+    if (!std::ifstream(directoryPath)) {
         std::string command = "mkdir -p " + directoryPath;
         system(command.c_str());
     }
 }
 
-void removeDirectoryRecursively(const std::string &dirPath)
-{
+void removeDirectoryRecursively(const std::string &dirPath) {
     std::string command;
-    if (isWindows())
-    {
+    if (isWindows()) {
         command = "rd /s /q \"" + dirPath + "\"";
     }
-    else
-    {
+    else {
         command = "rm -r \"" + dirPath + "\"";
     }
     system(command.c_str());
+}
+
+std::vector<std::vector<unsigned char>> loadMnistDataset(int& numberOfImages) {
+    std::string inputFilename = "../data/train-images.idx3-ubyte";
+    return readMnistImages(inputFilename, numberOfImages);;
 }
 
 int main()
@@ -191,9 +251,8 @@ int main()
     createDirectoryIfNotExists(inputDir);
     createDirectoryIfNotExists(outputDir);
 
-    std::string inputFilename = "../data/train-images.idx3-ubyte";
     int numberOfImages = 0;
-    auto images = readMnistImages(inputFilename, numberOfImages);
+    auto originalImages = loadMnistDataset(numberOfImages);
 
     double totalTime = 0.0;
 
@@ -201,26 +260,29 @@ int main()
     std::string outputDirectory = "../output";
 
     int windowSize = 2; // Blur windows size
+
+    std::cout << "start processing " << std::endl;
+
     for (int i = 0; i < numberOfImages; ++i)
     {
         StartTimer();
-        std::vector<unsigned char> blurredImage(28 * 28);
+        std::vector<unsigned char> blurredImage(MNIST_IMAGE_WIDTH * MNIST_IMAGE_HEIGHT);
         for (int j = 0; j < 10; ++j)
         {
-            applyWindowedAverageBlur(images[i], blurredImage, 28, 28, windowSize);
+            //applyWindowedAverageBlur(originalImages[i], blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+
+            applyGaussianKernelImageBlur(originalImages[i], blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
 
             if (i % 1000 == 0)
             { // Check if the index is a multiple of 100
                 // Save the original image
                 std::string originalFilename = inputDir + "/original_image_" + std::to_string(i) + ".png";
-                saveImageAsPNG(images[i], originalFilename, 28, 28);
+                saveImageAsPNG(originalImages[i], originalFilename, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT);
 
                 // Save the blurred image
                 std::string blurredFilename = outputDir + "/blurred_image_" + std::to_string(i) + "_iter" + std::to_string(j) + ".png";
-                saveImageAsPNG(blurredImage, blurredFilename, 28, 28);
+                saveImageAsPNG(blurredImage, blurredFilename, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT);
             }
-
-            std::cout << "Saved image " << i << std::endl;
         }
         const double tElapsed = GetTimer() / 1000.0;
         totalTime += tElapsed;
@@ -230,8 +292,8 @@ int main()
 
     double avgTime = totalTime / (double)(numberOfImages);
 
-    printf("%0.3f totalTime / second\n", totalTime);
-    printf("%0.3f avgTime / second\n", avgTime);
+    printf("totalTime: %0.3f second\n", totalTime);
+    printf("avgTime %0.3f second\n", avgTime);
 
     return 0;
 }
