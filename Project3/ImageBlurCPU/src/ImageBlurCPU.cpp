@@ -3,6 +3,7 @@
 #include <vector>
 #include <cstdlib>
 #include <cmath>
+#include <typeinfo>
 #include "../include/ImageBlurCPU.h"
 
 // Constants for MNIST images
@@ -131,7 +132,7 @@ void applyWindowedAverageBlur(const std::vector<unsigned char> &inputImage, std:
 }
 
 void generateGaussian(std::vector<double> &K, int dim, int radius) {
-    double stdev = 1;
+    double stdev = 0.2;
     double pi = 22.0 / 7.0;
     double constant = 1.0 / (2.0 * pi * pow(stdev, 2));
     double value;
@@ -204,12 +205,37 @@ void applyGaussianKernelImageBlur(const std::vector<unsigned char>& inputImage, 
     // Apply Gaussian blur
     gaussianKernelImageBlur(inputImageTuples, outputImageTuples, kernel, width, height, windowSize);
 
+    /*
+     * Normalizing output matrix values
+     */
+    int maxR = 0, maxG = 0, maxB = 0;
+    int r, g, b;
+
+    // Find the maximum values for each channel
+    for (auto& value : outputImageTuples) {
+        std::tie(r, g, b) = value;
+        maxR = std::max(r, maxR);
+        maxG = std::max(g, maxG);
+        maxB = std::max(b, maxB);
+    }
+
+    // Normalize each pixel value
+    for (auto& value : outputImageTuples) {
+        int r, g, b;
+        std::tie(r, g, b) = value;
+        r = (r * 255) / maxR;
+        g = (g * 255) / maxG;
+        b = (b * 255) / maxB;
+        value = std::make_tuple(r, g, b);
+    }
+
     // Prepare the output image
-    outputImage.resize(width * height);
+    outputImage.resize(width * height );
     for (int i = 0; i < width * height; ++i) {
         // Since the image is grayscale, we can take any channel's value as the output
         outputImage[i] = std::get<0>(outputImageTuples[i]);
     }
+
 }
 
 void saveImageAsPNG(const std::vector<unsigned char> &image, const std::string &filename, int width, int height) {
@@ -259,7 +285,7 @@ int main()
     // The path to the directory where the output images will be saved
     std::string outputDirectory = "../output";
 
-    int windowSize = 2; // Blur windows size
+    int windowSize = 3; // Blur windows size
 
     std::cout << "start processing " << std::endl;
 
@@ -267,23 +293,28 @@ int main()
     {
         StartTimer();
         std::vector<unsigned char> blurredImage(MNIST_IMAGE_WIDTH * MNIST_IMAGE_HEIGHT);
+
+        auto currentImage = originalImages[i]; // Initially, use the original image
+
         for (int j = 0; j < 10; ++j)
         {
-            //applyWindowedAverageBlur(originalImages[i], blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            //applyWindowedAverageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
 
-            applyGaussianKernelImageBlur(originalImages[i], blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            applyGaussianKernelImageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            currentImage = blurredImage;
 
             if (i % 1000 == 0)
             { // Check if the index is a multiple of 100
                 // Save the original image
                 std::string originalFilename = inputDir + "/original_image_" + std::to_string(i) + ".png";
-                saveImageAsPNG(originalImages[i], originalFilename, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT);
+                saveImageAsPNG(currentImage, originalFilename, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT);
 
                 // Save the blurred image
                 std::string blurredFilename = outputDir + "/blurred_image_" + std::to_string(i) + "_iter" + std::to_string(j) + ".png";
                 saveImageAsPNG(blurredImage, blurredFilename, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT);
             }
         }
+
         const double tElapsed = GetTimer() / 1000.0;
         totalTime += tElapsed;
     }
