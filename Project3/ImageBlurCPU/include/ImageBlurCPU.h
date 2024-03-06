@@ -1,11 +1,11 @@
 /**
- * @file ImageBlurCPU.cpp
- * @brief Use windowed averaging blur algorithm and Gaussian kernel to convert each image in the MNIST dataset into Blur images.
+ * @file ImageBlurCPU.h
+ * @brief Use advanced features of C++11 to declare(Only CPU version, but it is incompatible with nvcc) windowed averaging blur algorithm and Gaussian kernel to convert each image in the MNIST dataset into Blur images.
  *        The original images and blur images of the MNIST dataset are present in ../input and ../output folders.
  *        Go to the directory where the Makefile file is located, and then enter the make command at the command line to complete the compilation, and then generate the ImageBlurCPU executable file, finally run it.
  * @authors Yan Huang, Oluwabunmi Iwakin
  * @date 03-02-2024
- * @link https://github.com/YanHuang1994/CUDA/tree/main/Project3
+ * @link https://github.com/YanHuang1994/CUDA/blob/main/Project3/ImageBlurCPU/include/ImageBlurCPU.h
  *
  */
 #pragma once

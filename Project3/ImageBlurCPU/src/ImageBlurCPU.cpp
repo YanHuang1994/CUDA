@@ -1,3 +1,12 @@
+/**
+ * @file ImageBlurCPU.cpp
+ * @brief Implementation of windowed averaging blur algorithm and Gaussian kernel
+ *        to blur images from the MNIST dataset. It reads original images from the
+ *        ../input folder, applies blurring, and saves the result to the ../output folder.
+ * @authors Yan Huang, Oluwabunmi Iwakin
+ * @date 03-02-2024
+ */
+
 #include <fstream>
 #include <iostream>
 #include <vector>
