@@ -332,22 +332,17 @@ void GpuVersion() {
     char originalFilename[256];
     char blurredFilename[256];
     for (int i = 0; i < numberOfImages; ++i) {
+		unsigned char* currentImage = &images[i * imageSize];
         if (i % 1000 == 0) {
-            memcpy(tempImage, &images[i * imageSize], imageSize);
+            memcpy(tempImage, currentImage, imageSize);
             snprintf(originalFilename, sizeof(originalFilename), "../input/original_image_%d.png", i);
-            saveImage(originalFilename, &images[i * imageSize], nCols, nRows);
+            saveImage(originalFilename, currentImage, nCols, nRows);
         }
         for (int j = 0; j < 10; ++j) {
-            size_t threadsPerBlock;
-            size_t numberOfBlocks;
-
-            //threadsPerBlock = 256;
-            //numberOfBlocks = 32 * numberOfSMs;
             int BLOCK_SIZE = 16;
             dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE);
             dim3 gridSize((nRows + BLOCK_SIZE - 1) / BLOCK_SIZE, (nCols + BLOCK_SIZE - 1) / BLOCK_SIZE);
-            //applyWindowedAverageBlurCUDA<<<numberOfBlocks, threadsPerBlock>>>(images, blurredImage, nCols, nRows, 1, 3);
-            applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(images, blurredImage, nCols, nRows, 1, 3);
+            applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 1, 3);
             if (i % 1000 == 0) {
                 memcpy(tempImage, blurredImage, imageSize);
 
