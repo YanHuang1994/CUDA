@@ -5,15 +5,11 @@
  *        Go to the directory where the Makefile file is located, and then enter the make command at the command line to complete the compilation, and then generate the ImageBlurCPU executable file, finally run it.
  * @authors Yan Huang, Oluwabunmi Iwakin
  * @date 03-02-2024
- * @link https://github.com/YanHuang1994/CUDA/tree/main/Project3
+ * @link https://github.com/YanHuang1994/CUDA/blob/main/Project3/ImageBlurGPU/include/ImageBlurGPU.h
  *
  */
 #ifndef IMAGE_BLUR_GPU_H
 #define IMAGE_BLUR_GPU_H
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -22,10 +18,15 @@
 #endif
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../include/stb_image.h"
+#include "../include/stb_image.h" //Provides a simple API to load, decode and query image information. Supports a variety of formats including JPEG, PNG, BMP, TGA, etc.
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../include/stb_image_write.h"
-
+#include "../include/stb_image_write.h" //Used to write image data to a file, supports a variety of image formats, such as PNG, TGA, BMP and so on.
+#include "../include/timer.h"
+#include "../include/files.h"
+#include "../include/check.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,6 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
-
 #include <cuda_runtime.h>
 
 // Function to reverse the bytes of an integer
@@ -48,9 +48,6 @@ void applyWindowedAverageBlur(unsigned char *input, unsigned char *output, int w
 
 // Function to apply windowed average blur to an image on GPU
 __global__ void applyWindowedAverageBlurCUDA(unsigned char *input, unsigned char *output, int width, int height, int channels, int windowSize);
-
-// Host function to launch the CUDA kernel
-void applyWindowedAverageBlurCUDAWrapper(unsigned char *input, unsigned char *output, int width, int height, int channels, int windowSize);
 
 // Function to generate Gaussian kernel
 void generateGaussian(float *kernel, int kernelSize, float sigma);
@@ -72,6 +69,9 @@ void removeDirectoryRecursively(const std::string &dirPath);
 
 // Function to read MNIST image data from a file
 void readMNISTImages(const char* filename, unsigned char** images, int* numberOfImages, int* nRows, int* nCols);
+
+// Function to process input and output directory
+void processDirectory();
 
 // cpu version code
 void CpuVersion();

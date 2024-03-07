@@ -5,6 +5,7 @@
  *        ../input folder, applies blurring, and saves the result to the ../output folder.
  * @authors Yan Huang, Oluwabunmi Iwakin
  * @date 03-02-2024
+ * @link https://github.com/YanHuang1994/CUDA/blob/main/Project3/ImageBlurGPU/src/ImageBlurGPU.cu
  */
 
 #include "../include/ImageBlurGPU.h"
@@ -74,41 +75,6 @@ void applyWindowedAverageBlur(unsigned char *input, unsigned char *output, int w
         }
     }
 }
-
-// __global__ void applyWindowedAverageBlurCUDA(unsigned char *input, unsigned char *output, int width, int height, int channels, int windowSize) {
-//     // Calculate the current thread's corresponding pixel (x, y) in the image
-//     int x = blockIdx.x * blockDim.x + threadIdx.x;
-//     int y = blockIdx.y * blockDim.y + threadIdx.y;
-
-//     if (x >= width || y >= height) {
-//         return; // Skip out-of-bounds pixels
-//     }
-
-//     long long sum[4] = {0};
-//     int count = 0;
-
-//     // Iterate over the window centered around (x, y)
-//     for (int wy = -windowSize; wy <= windowSize; wy++) {
-//         for (int wx = -windowSize; wx <= windowSize; wx++) {
-//             int nx = x + wx;
-//             int ny = y + wy;
-
-//             // Check bounds
-//             if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-//                 // Sum pixel values across all channels
-//                 for (int c = 0; c < channels; c++) {
-//                     sum[c] += input[(ny * width + nx) * channels + c];
-//                 }
-//                 count++;
-//             }
-//         }
-//     }
-
-//     // Write the average value back to the output image
-//     for (int c = 0; c < channels; c++) {
-//         output[(y * width + x) * channels + c] = static_cast<unsigned char>(sum[c] / count);
-//     }
-// }
 
 __global__ void applyWindowedAverageBlurCUDA(uint8_t *input, uint8_t *output, int width, int height, int channels, int windowSize) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
@@ -234,14 +200,7 @@ void readMNISTImages(const char* filename, unsigned char** images, int* numberOf
     fclose(file); // Close file
 }
 
-int main() {
-
-    //CpuVersion();
-    GpuVersion();
-    return 0;
-}
-
-void CpuVersion() {
+void processDirectory() {
     removeDirectoryRecursively("../input");
     removeDirectoryRecursively("../output");
 
@@ -251,10 +210,38 @@ void CpuVersion() {
     // Create input and output directories if they don't exist
     createDirectoryIfNotExists(inputDir);
     createDirectoryIfNotExists(outputDir);
+}
+
+int main() {
+
+    int choice = 0;
+    std::cout << "Enter 1 for CpuVersion or 2 for GpuVersion: ";
+    std::cin >> choice;
+
+    if (choice == 1) {
+        std::cout << "Start processing the cpu version of the blur algorithm." << std::endl;
+        CpuVersion();
+    } else if (choice == 2) {
+        std::cout << "Start processing the gpu version of the blur algorithm." << std::endl;
+        GpuVersion();
+    }
+
+    return 0;
+}
+
+void CpuVersion() {
+
+    processDirectory();
+
+    int choice = 0;
+    std::cout << "Enter 1 for Windowed Average Blur or 2 for Gaussian Kernel Blur. ";
+    std::cin >> choice;
+
+    double totalTime = 0.0;
 
     unsigned char* images;
     int numberOfImages, nRows, nCols;
-    readMNISTImages("../code/data/train-images.idx3-ubyte", &images, &numberOfImages, &nRows, &nCols);
+    readMNISTImages("../data/train-images.idx3-ubyte", &images, &numberOfImages, &nRows, &nCols);
 
     int imageSize = nRows * nCols;
     unsigned char* blurredImage = (unsigned char*)malloc(imageSize);
@@ -271,15 +258,25 @@ void CpuVersion() {
     char originalFilename[256];
     char blurredFilename[256];
     for (int i = 0; i < numberOfImages; ++i) {
+        StartTimer();
+        unsigned char* currentImage = &images[i * imageSize];
         if (i % 1000 == 0) {
-            memcpy(tempImage, &images[i * imageSize], imageSize);
+            memcpy(tempImage, currentImage, imageSize);
             snprintf(originalFilename, sizeof(originalFilename), "../input/original_image_%d.png", i);
-            saveImage(originalFilename, &images[i * imageSize], nCols, nRows);
+            saveImage(originalFilename, currentImage, nCols, nRows);
         }
         for (int j = 0; j < 10; ++j) {
-            //applyWindowedAverageBlur(tempImage, blurredImage, nRows, nCols, 1, 3);
-            float *kernel = (float *)malloc(3 * 3 * sizeof(float));
-            applyGaussianKernelBlur(tempImage, blurredImage, nRows, nCols, kernel, 1, 3);
+            if (choice == 1) {
+                applyWindowedAverageBlur(tempImage, blurredImage, nRows, nCols, 1, 3);
+            } else if (choice == 2) {
+                float *kernel = (float *)malloc(3 * 3 * sizeof(float));
+                if (kernel == NULL) {
+                    printf("Memory allocation for Gaussian kernel failed\n");
+                } else {
+                    applyGaussianKernelBlur(tempImage, blurredImage, nRows, nCols, kernel, 1, 3);
+                    free(kernel);
+                }
+            }
 
             if (i % 1000 == 0) {
                 memcpy(tempImage, blurredImage, imageSize);
@@ -287,35 +284,33 @@ void CpuVersion() {
                 snprintf(blurredFilename, sizeof(blurredFilename), "../output/blurred_image_%d_iter%d.png", i, j);
                 saveImage(blurredFilename, blurredImage, nCols, nRows);
             }
-            free(kernel);
         }
+        const double tElapsed = GetTimer() / 1000.0;
+        totalTime += tElapsed;
     }
+    std::cout << "Processed " << numberOfImages << " images." << std::endl;
+    double avgTime = totalTime / (double)(numberOfImages);
+    printf("totalTime: %0.3f second\n", totalTime);
+    printf("avgTime %0.3f second\n", avgTime);
+
     free(images);
     free(blurredImage);
     free(tempImage);
 }
 
 void GpuVersion() {
-    removeDirectoryRecursively("../input");
-    removeDirectoryRecursively("../output");
-
-    std::string inputDir = "../input";
-    std::string outputDir = "../output";
-
-    // Create input and output directories if they don't exist
-    createDirectoryIfNotExists(inputDir);
-    createDirectoryIfNotExists(outputDir);
+    processDirectory();
+    double totalTime = 0.0;
 
     unsigned char* images;
     unsigned char* tempImages;
     unsigned char* blurredImage;
     unsigned char* tempImage;
-
     int numberOfImages, nRows, nCols;
+
     readMNISTImages("../data/train-images.idx3-ubyte", &tempImages, &numberOfImages, &nRows, &nCols);
 
     int imageSize = nRows * nCols;
-
     cudaMallocManaged(&images, numberOfImages * imageSize * sizeof(unsigned char));
     cudaMallocManaged(&blurredImage, imageSize * sizeof(unsigned char));
     cudaMallocManaged(&tempImage, imageSize * sizeof(unsigned char));
@@ -325,13 +320,13 @@ void GpuVersion() {
 
     int deviceId;
     int numberOfSMs;
-
     cudaGetDevice(&deviceId);
     cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId);
 
     char originalFilename[256];
     char blurredFilename[256];
     for (int i = 0; i < numberOfImages; ++i) {
+        StartTimer();
 		unsigned char* currentImage = &images[i * imageSize];
         if (i % 1000 == 0) {
             memcpy(tempImage, currentImage, imageSize);
@@ -345,13 +340,19 @@ void GpuVersion() {
             applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 1, 3);
             if (i % 1000 == 0) {
                 memcpy(tempImage, blurredImage, imageSize);
-
                 snprintf(blurredFilename, sizeof(blurredFilename), "../output/blurred_image_%d_iter%d.png", i, j);
                 saveImage(blurredFilename, blurredImage, nCols, nRows);
             }
             cudaDeviceSynchronize();
         }
+        const double tElapsed = GetTimer() / 1000.0;
+        totalTime += tElapsed;
     }
+    std::cout << "Processed " << numberOfImages << " images." << std::endl;
+    double avgTime = totalTime / (double)(numberOfImages);
+    printf("totalTime: %0.3f second\n", totalTime);
+    printf("avgTime %0.3f second\n", avgTime);
+
     cudaFree(images);
     cudaFree(blurredImage);
     cudaFree(tempImage);
