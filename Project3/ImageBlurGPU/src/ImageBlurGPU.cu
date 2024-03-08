@@ -395,7 +395,7 @@ void GpuVersion() {
             
         }
         for (int j = 0; j < 10; ++j) {
-            int BLOCK_SIZE = 16;
+            int BLOCK_SIZE = 32;
             dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE);
             dim3 gridSize((nRows + BLOCK_SIZE - 1) / BLOCK_SIZE, (nCols + BLOCK_SIZE - 1) / BLOCK_SIZE);
             // applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 3, kernelSize);
