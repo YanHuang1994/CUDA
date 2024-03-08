@@ -1,4 +1,4 @@
-/**
+ /**
  * @file ImageBlurCPU.cu
  * @brief Using CUDA C++ to finish the Implementation of windowed averaging blur algorithm and Gaussian kernel
  *        to blur images from the MNIST dataset. It reads original images from the
@@ -76,33 +76,65 @@ void applyWindowedAverageBlur(unsigned char *input, unsigned char *output, int w
     }
 }
 
-__global__ void applyWindowedAverageBlurCUDA(uint8_t *input, uint8_t *output, int width, int height, int channels, int windowSize) {
+// __global__ void applyWindowedAverageBlurCUDA(uint8_t *input, uint8_t *output, int width, int height, int channels, int windowSize) {
+//     int col = blockIdx.x * blockDim.x + threadIdx.x;
+//     int row = blockIdx.y * blockDim.y + threadIdx.y;
+
+//     if (col < width && row < height) {
+//         int pixelIndex = row * width + col;
+//         float3 sum = make_float3(0.0f, 0.0f, 0.0f);
+
+//         int count = 0;
+//         for (int dy = -windowSize; dy <= windowSize; dy++) {
+//             for (int dx = -windowSize; dx <= windowSize; dx++) {
+//                 int nx = col + dx;
+//                 int ny = row + dy;
+//                 if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+//                     sum.x += input[(ny * width + nx) * 3];
+//                     sum.y += input[(ny * width + nx) * 3 + 1];
+//                     sum.z += input[(ny * width + nx) * 3 + 2];
+//                     count++;
+//                 }
+//             }
+//         }
+
+//         output[pixelIndex * 3] = (uint8_t)(sum.x / count);
+//         output[pixelIndex * 3 + 1] = (uint8_t)(sum.y / count);
+//         output[pixelIndex * 3 + 2] = (uint8_t)(sum.z / count);
+//     }
+// }
+
+__global__ void applyWindowedAverageBlurCUDA(uint8_t *inputImage, uint8_t *outImage, int width, int height, int channels, int windowSize) {
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int row = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (col < width && row < height) {
-        int pixelIndex = row * width + col;
-        float3 sum = make_float3(0.0f, 0.0f, 0.0f);
+        int r = 0, g = 0, b = 0;
+        int pixels = 0;
 
-        int count = 0;
-        for (int dy = -windowSize/2; dy <= windowSize/2; dy++) {
-            for (int dx = -windowSize/2; dx <= windowSize/2; dx++) {
-                int nx = col + dx;
-                int ny = row + dy;
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-                    sum.x += input[(ny * width + nx) * 3];
-                    sum.y += input[(ny * width + nx) * 3 + 1];
-                    sum.z += input[(ny * width + nx) * 3 + 2];
-                    count++;
+        for (int blurRow = -windowSize; blurRow <= windowSize; ++blurRow) {
+            for (int blurCol = -windowSize; blurCol <= windowSize; ++blurCol) {
+                int curRow = row + blurRow;
+                int curCol = col + blurCol;
+
+                if (curRow > -1 && curRow < height && curCol > -1 && curCol < width) {
+                    int idx = curRow * width + curCol;
+                    int curR = (inputImage[idx] >> 16) & 0xFF; // Extract red component
+                    int curG = (inputImage[idx] >> 8) & 0xFF;  // Extract green component
+                    int curB = inputImage[idx] & 0xFF;         // Extract blue component
+                    r += curR;
+                    g += curG;
+                    b += curB;
+                    pixels++;
                 }
             }
         }
 
-        output[pixelIndex * 3] = (uint8_t)(sum.x / count);
-        output[pixelIndex * 3 + 1] = (uint8_t)(sum.y / count);
-        output[pixelIndex * 3 + 2] = (uint8_t)(sum.z / count);
+        int outIdx = row * width + col;
+        outImage[outIdx] = ((r / pixels) << 16) | ((g / pixels) << 8) | (b / pixels); // Pack RGB values into a single integer
     }
 }
+
 
 void generateGaussian(float *kernel, int kernelSize, float sigma) {
     float sum = 0.0f;
@@ -148,6 +180,26 @@ void applyGaussianKernelBlur(unsigned char *input, unsigned char *output, int wi
     float sigma = 1.0f;
     generateGaussian(kernel, windowSize, sigma);
     gaussianBlur(input, output, width, height, kernel, windowSize);
+}
+
+__global__ void gaussianBlurCUDA(const unsigned char* input, unsigned char* output, int width, int height, const float* kernel, int kernelSize) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+    if (x < width && y < height) {
+        int halfKernel = kernelSize / 2;
+        float sum = 0.0f;
+        for (int ky = -halfKernel; ky <= halfKernel; ky++) {
+            for (int kx = -halfKernel; kx <= halfKernel; kx++) {
+                int px = x + kx;
+                int py = y + ky;
+                if (px >= 0 && px < width && py >= 0 && py < height) {
+                    sum += input[py * width + px] * kernel[(ky + halfKernel) * kernelSize + (kx + halfKernel)];
+                }
+            }
+        }
+        output[y * width + x] = static_cast<unsigned char>(sum);
+    }
 }
 
 void saveImage(const char* filename, unsigned char* buffer, int width, int height) {
@@ -300,6 +352,11 @@ void CpuVersion() {
 
 void GpuVersion() {
     processDirectory();
+
+    int choice = 0;
+    std::cout << "Enter 1 for Windowed Average Blur or 2 for Gaussian Kernel Blur. ";
+    std::cin >> choice;
+
     double totalTime = 0.0;
 
     unsigned char* images;
@@ -320,8 +377,11 @@ void GpuVersion() {
 
     int deviceId;
     int numberOfSMs;
+    int kernelSize = 3;
     cudaGetDevice(&deviceId);
     cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId);
+
+    float sigma = 1.0f;
 
     char originalFilename[256];
     char blurredFilename[256];
@@ -332,22 +392,49 @@ void GpuVersion() {
             memcpy(tempImage, currentImage, imageSize);
             snprintf(originalFilename, sizeof(originalFilename), "../input/original_image_%d.png", i);
             saveImage(originalFilename, currentImage, nCols, nRows);
+            
         }
         for (int j = 0; j < 10; ++j) {
             int BLOCK_SIZE = 16;
             dim3 blockSize(BLOCK_SIZE, BLOCK_SIZE);
             dim3 gridSize((nRows + BLOCK_SIZE - 1) / BLOCK_SIZE, (nCols + BLOCK_SIZE - 1) / BLOCK_SIZE);
-            applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 1, 3);
+            // applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 3, kernelSize);
+
+            if (choice == 1) {
+                applyWindowedAverageBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, 3, kernelSize);
+            } else if (choice == 2) {
+                float *kernel;
+                cudaMallocManaged(&kernel, 3 * 3 * sizeof(float));
+                generateGaussian(kernel, kernelSize, sigma);
+                
+                float *dkernel;
+                cudaMalloc(&dkernel, kernelSize * kernelSize * sizeof(float));
+                cudaMemcpy(dkernel, kernel, kernelSize * kernelSize * sizeof(float), cudaMemcpyHostToDevice);
+                    
+                generateGaussian(kernel, kernelSize, sigma);
+                cudaDeviceSynchronize();
+
+                if (kernel == NULL) {
+                    printf("Memory allocation for Gaussian kernel failed\n");
+                } else {
+                    gaussianBlurCUDA<<<gridSize, blockSize>>>(currentImage, blurredImage, nCols, nRows, dkernel, kernelSize);
+
+                    cudaFree(kernel);
+                    cudaFree(dkernel);
+                }
+            }
+
             if (i % 1000 == 0) {
-                memcpy(tempImage, blurredImage, imageSize);
+                memcpy(currentImage, blurredImage, imageSize);
                 snprintf(blurredFilename, sizeof(blurredFilename), "../output/blurred_image_%d_iter%d.png", i, j);
                 saveImage(blurredFilename, blurredImage, nCols, nRows);
             }
-            cudaDeviceSynchronize();
         }
         const double tElapsed = GetTimer() / 1000.0;
         totalTime += tElapsed;
     }
+    // cudaDeviceSynchronize();
+    
     std::cout << "Processed " << numberOfImages << " images." << std::endl;
     double avgTime = totalTime / (double)(numberOfImages);
     printf("totalTime: %0.3f second\n", totalTime);
