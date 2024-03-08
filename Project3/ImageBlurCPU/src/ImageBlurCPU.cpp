@@ -1,18 +1,13 @@
 /**
  * @file ImageBlurCPU.cpp
- * @brief Implementation of windowed averaging blur algorithm and Gaussian kernel
+ * @brief Use advanced features of C++11 to declare(Only CPU version, but it is incompatible with nvcc). Implementation of windowed averaging blur algorithm and Gaussian kernel
  *        to blur images from the MNIST dataset. It reads original images from the
  *        ../input folder, applies blurring, and saves the result to the ../output folder.
+ *        The comments for all the functions in this .cpp file are in the ../include/ImageBlurCPU.h
  * @authors Yan Huang, Oluwabunmi Iwakin
  * @date 03-02-2024
  */
 
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <cstdlib>
-#include <cmath>
-#include <typeinfo>
 #include "../include/ImageBlurCPU.h"
 
 // Constants for MNIST images
@@ -287,7 +282,12 @@ int main()
     createDirectoryIfNotExists(outputDir);
 
     int numberOfImages = 0;
-    auto originalImages = loadMnistDataset(numberOfImages);
+    auto originalImages = loadMnistDataset(numberOfImages); // load train-images.idx3-ubyte
+
+    if (!originalImages.size()) {
+        std::cout << "load mnist dataset failed\n " << std::endl;
+        return -1;
+    }
 
     double totalTime = 0.0;
 
@@ -295,6 +295,10 @@ int main()
     std::string outputDirectory = "../output";
 
     int windowSize = 3; // Blur windows size
+
+    int choice = 0;
+    std::cout << "Enter 1 for Windowed Average Blur or 2 for Gaussian Kernel Blur. ";
+    std::cin >> choice;
 
     std::cout << "start processing " << std::endl;
 
@@ -307,9 +311,12 @@ int main()
 
         for (int j = 0; j < 10; ++j)
         {
-            //applyWindowedAverageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            if (choice == 1) {
+                applyWindowedAverageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            } else if (choice == 2) {
+                applyGaussianKernelImageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
+            }
 
-            applyGaussianKernelImageBlur(currentImage, blurredImage, MNIST_IMAGE_WIDTH, MNIST_IMAGE_HEIGHT, windowSize);
             currentImage = blurredImage;
 
             if (i % 1000 == 0)

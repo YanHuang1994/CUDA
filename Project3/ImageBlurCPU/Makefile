@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++11 -Wall -g
+CFLAGS = -std=c++11 -Wall -g -O2 -fopenmp
 
 SRCS = ./src/ImageBlurCPU.cpp
 OBJS = $(SRCS:.cpp=.o)

@@ -20,6 +20,11 @@
 #include <vector>
 #include <tuple>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <cstdlib>
+#include <cmath>
+#include <typeinfo>
 
 using namespace std;
 

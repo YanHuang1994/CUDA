@@ -37,6 +37,9 @@
 #include <cassert>
 #include <cuda_runtime.h>
 
+// Read and detect any inline Errors
+inline cudaError_t checkCuda(cudaError_t result);
+
 // Function to reverse the bytes of an integer
 int reverseInt(int i);
 
@@ -55,10 +58,13 @@ void generateGaussian(float *kernel, int kernelSize, float sigma);
 // Function to Gaussian blur to an image
 void gaussianBlur(unsigned char *input, unsigned char *output, int width, int height, float *kernel, int kernelSize);
 
-// Function to apply windowed average blur to an image on CPU
+// Function to apply gaussian blur to an image on CPU
 void applyGaussianKernelBlur(unsigned char *input, unsigned char *output, int width, int height, float *kernel, int channels, int windowSize);
 
-// Function to save an image to a file
+// Function to apply gaussian blur to an image on GPU
+__global__ void gaussianBlurCUDA(const unsigned char* input, unsigned char* output, int width, int height, const float* kernel, int kernelSize);
+
+// Function to save an image to a png file, calling the function of stb library
 void saveImage(const char* filename, unsigned char* buffer, int width, int height);
 
 // Function to create a directory if it does not exist
@@ -70,13 +76,13 @@ void removeDirectoryRecursively(const std::string &dirPath);
 // Function to read MNIST image data from a file
 void readMNISTImages(const char* filename, unsigned char** images, int* numberOfImages, int* nRows, int* nCols);
 
-// Function to process input and output directory
+// Function to process input and output directory, ../input directory saves the original images and ../output directory saves the blurred images.
 void processDirectory();
 
-// cpu version code
+// cpu version code, include window average and gaussian kernel
 void CpuVersion();
 
-// gpu version code
+// gpu version code, include window average and gaussian kernel
 void GpuVersion();
 
 #endif // IMAGE_BLUR_GPU_H
